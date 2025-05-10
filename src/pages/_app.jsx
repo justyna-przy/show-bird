@@ -5,6 +5,7 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "@/styles/theme";
 import MyGlobalStyles from "@/styles/GlobalStyles";
 import Navbar from "@/components/Navbar";
+import { WalletProvider } from "@/hooks/useWallet";
 
 export default function MyApp({ Component, pageProps }) {
   return (
@@ -16,12 +17,15 @@ export default function MyApp({ Component, pageProps }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-          href="https://fonts.googleapis.com/css2?family=Jua&family=Quicksand:wght@300..700&family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cactus+Classical+Serif&family=Koh+Santepheap:wght@100;300;400;700;900&family=Ledger&family=Quicksand:wght@300..700&display=swap"
           rel="stylesheet"
         />
       </Head>
-      <Navbar/>
-      <Component {...pageProps} />
+
+      <WalletProvider>
+        <Navbar />
+        <Component {...pageProps} />
+      </WalletProvider>
     </ThemeProvider>
   );
 }
