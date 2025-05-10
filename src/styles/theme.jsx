@@ -6,7 +6,7 @@ const theme = createTheme({
     mode: "light",
     background: {
       default: "#d1d5de",
-      paper: "#eff2f9",
+      paper: "#fdf8f8",
     },
     text: {
       primary: "#292722",
@@ -34,6 +34,7 @@ const theme = createTheme({
     h2: {
       fontWeight: 700,
       fontSize: "1.8rem",
+      color: (palette) => palette.text.secondary,
     },
     body1: {
       fontSize: "1rem",

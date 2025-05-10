@@ -29,7 +29,7 @@ const NavLink = styled(Link)(({ theme }) => ({
 }));
 
 const Navbar = () => {
-  const theme   = useTheme();
+  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
   const { address, owner, connect, disconnect } = useWallet();
@@ -40,12 +40,13 @@ const Navbar = () => {
     { title: "About", path: "/about" },
     { title: "Tickets", path: "/tickets" },
   ];
-  const auth   = address ? [
-    { title: "Balance", path: "/balance" },
-    { title: "Transfer", path: "/transfer" },
-
-  ] : [];
-  const admin  = owner ? [{ title: "Dashboard", path: "/dashboard" }] : [];
+  const auth = address
+    ? [
+        { title: "Balance", path: "/balance" },
+        { title: "Transfer", path: "/transfer" },
+      ]
+    : [];
+  const admin = owner ? [{ title: "Dashboard", path: "/dashboard" }] : [];
 
   const links = [...base, ...auth, ...admin];
 
@@ -71,8 +72,10 @@ const Navbar = () => {
   );
 
   return (
-    <AppBar position="static"
-      sx={{ bgcolor: theme.palette.background.default, boxShadow: "none" }}>
+    <AppBar
+      position="static"
+      sx={{ bgcolor: theme.palette.background.default, boxShadow: "none" }}
+    >
       <Toolbar
         sx={{
           px: { xs: 2, md: 4 },
@@ -82,27 +85,39 @@ const Navbar = () => {
       >
         {/* ---------- left: logo ---------- */}
         <Box sx={{ display: "flex", alignItems: "center", mr: 2 }}>
-          <Image src="/images/logo3.png" alt="logo" width={50} height={50}
-                 style={{ transform: "scaleX(-1)" }} />
-          <NavLink href="/" style={{
-            fontFamily: "'Roca Two',sans-serif",
-            fontSize: "2rem",
-            marginLeft: 8,
-          }}>
+          <Image
+            src="/images/logo3.png"
+            alt="logo"
+            width={50}
+            height={50}
+            style={{ transform: "scaleX(-1)" }}
+          />
+          <NavLink
+            href="/"
+            style={{
+              fontFamily: "'Roca Two',sans-serif",
+              fontSize: "2rem",
+              marginLeft: 8,
+            }}
+          >
             ShowBird
           </NavLink>
         </Box>
 
         {/* ---------- centre: nav links (desktop only) ---------- */}
         {!isMobile && (
-          <Box sx={{
-            flexGrow: 1,
-            display: "flex",
-            justifyContent: "center",
-            gap: 3,
-          }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              justifyContent: "center",
+              gap: 3,
+            }}
+          >
             {links.map(({ title, path }) => (
-              <NavLink key={title} href={path}>{title}</NavLink>
+              <NavLink key={title} href={path}>
+                {title}
+              </NavLink>
             ))}
           </Box>
         )}
@@ -113,8 +128,12 @@ const Navbar = () => {
             <IconButton onClick={() => setOpen(true)} sx={{ ml: "auto" }}>
               <FaBars size={24} color={theme.palette.text.primary} />
             </IconButton>
-            <Drawer anchor="right" open={open}
-                    onClose={() => setOpen(false)} ModalProps={{ keepMounted: true }}>
+            <Drawer
+              anchor="right"
+              open={open}
+              onClose={() => setOpen(false)}
+              ModalProps={{ keepMounted: true }}
+            >
               {drawer}
             </Drawer>
           </>

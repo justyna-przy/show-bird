@@ -23,8 +23,20 @@ export default function MyApp({ Component, pageProps }) {
       </Head>
 
       <WalletProvider>
-        <Navbar />
-        <Component {...pageProps} />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "100vh",
+          }}
+        >
+          <Navbar />
+
+          {/* flex-grow so it fills the rest of the viewport */}
+          <main style={{ flexGrow: 1, display: "flex" }}>
+            <Component {...pageProps} />
+          </main>
+        </div>
       </WalletProvider>
     </ThemeProvider>
   );

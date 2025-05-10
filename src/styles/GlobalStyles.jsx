@@ -30,7 +30,7 @@ const MyGlobalStyles = () => (
       body: {
         margin: 0,
         padding: 0,
-        backgroundColor: "#efefef" ,
+        backgroundColor: "#e2e2e2" ,
         color: theme.palette.text.primary,
 
       },
