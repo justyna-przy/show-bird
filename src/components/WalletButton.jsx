@@ -1,18 +1,36 @@
 // components/WalletButton.jsx
-import React from "react";
-import { Chip, Avatar, Button } from "@mui/material";
+"use client";
+
+import React, { useState } from "react";
+import {
+  Chip,
+  Avatar,
+  Button,
+  Menu,
+  MenuItem,
+  Typography,
+} from "@mui/material";
 import Jazzicon from "react-jazzicon";
+import { FaRegCopy } from "react-icons/fa";
 import { useRouter } from "next/router";
 import { useWallet } from "@/hooks/useWallet";
 
 const shorten = (addr) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
-const WalletButton = () => {
-  const { address, owner, disconnect } = useWallet();
+export default function WalletButton() {
+  const {
+    address,
+    isConnected,
+    disconnect,
+    loadingRoles,
+    isVenue,
+    isDoorman,
+    isAttendee,
+  } = useWallet();
   const router = useRouter();
 
-  /* ▸  Not connected → go to /connect-wallet  */
-  if (!address) {
+  /* ────────────── Not connected ────────────── */
+  if (!isConnected) {
     return (
       <Button
         variant="contained"
@@ -23,22 +41,71 @@ const WalletButton = () => {
     );
   }
 
-  /* ▸  Connected → show chip with Jazzicon and allow disconnect */
-  return (
-    <Chip
-      avatar={
-        <Avatar sx={{ bgcolor: "transparent" }}>
-          <Jazzicon
-            diameter={20}
-            seed={parseInt(address.slice(2, 10), 16)}
-          />
-        </Avatar>
-      }
-      label={owner ? `Admin · ${shorten(address)}` : shorten(address)}
-      onClick={disconnect}
-      sx={{ cursor: "pointer", fontWeight: 600 }}
-    />
-  );
-};
+  /* ────────────── Connected ────────────── */
+  const roleLabel = loadingRoles
+    ? "Loading…"
+    : isVenue
+    ? "Venue"
+    : isDoorman
+    ? "Doorman"
+    : isAttendee
+    ? "Attendee"
+    : "Unknown";
 
-export default WalletButton;
+  /*  anchor & copy helpers  */
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+  const copyAddr = async () => {
+    await navigator.clipboard.writeText(address);
+    handleClose();
+  };
+
+  /*  menu width matches chip width  */
+  const menuWidth = anchorEl ? anchorEl.offsetWidth : undefined;
+
+  return (
+    <>
+      <Chip
+        avatar={
+          <Avatar sx={{ bgcolor: "transparent" }}>
+            <Jazzicon diameter={20} seed={parseInt(address.slice(2, 10), 16)} />
+          </Avatar>
+        }
+        label={shorten(address)}
+        onClick={handleOpen}
+        sx={{ cursor: "pointer", fontWeight: 600, height: "2.5rem", fontSize: "1rem", borderRadius: "1.5rem", paddingX: "0.5rem", paddingY: "0.5rem" }}
+      />
+
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        PaperProps={{ sx: { width: menuWidth } }}
+  
+      >
+        {/* Role line – normal text */}
+        <MenuItem disableRipple sx={{ pointerEvents: "none" }}>
+          <Typography variant="body2">Role: {roleLabel}</Typography>
+        </MenuItem>
+
+        {/* Copy with icon */}
+        <MenuItem onClick={copyAddr}>
+          <FaRegCopy style={{ marginRight: 8 }} />
+          Copy&nbsp;Address
+        </MenuItem>
+
+        {/* Disconnect */}
+        <MenuItem
+          onClick={() => {
+            disconnect();
+            handleClose();
+          }}
+        >
+          Disconnect
+        </MenuItem>
+      </Menu>
+    </>
+  );
+}

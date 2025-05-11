@@ -6,19 +6,22 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title TicketToken
- * @dev 0 decimals (1 token = 1 ticket), capped supply, payable mint, owner withdraw
+ * @dev 0 decimals (1 token = 1 ticket), capped supply, payable mint, owner withdraw,
+ *      role management: venue (owner), doormen, attendees.
  */
 contract TicketToken is ERC20Capped, Ownable {
     uint256 public priceWei;
+    mapping(address => bool) public isDoorman;
 
-    /// @param cap_      max tickets
-    /// @param priceWei_ cost per ticket in wei
+    event DoormanStatusChanged(address indexed account, bool isDoorman);
+
+    /**
+     * @param cap_      max tickets
+     * @param priceWei_ cost per ticket in wei
+     */
     constructor(uint256 cap_, uint256 priceWei_)
-        // pass name + symbol to ERC20
         ERC20("ShowBird Ticket", "SBT")
-        // pass cap to ERC20Capped
         ERC20Capped(cap_)
-        // pass deployer as owner to Ownable
         Ownable(msg.sender)
     {
         priceWei = priceWei_;
@@ -44,5 +47,27 @@ contract TicketToken is ERC20Capped, Ownable {
     /// (Optional) Owner can adjust ticket price
     function setPrice(uint256 newPriceWei) external onlyOwner {
         priceWei = newPriceWei;
+    }
+
+    /// Owner can grant or revoke Doorman role to an address
+    function setDoorman(address account, bool status) external onlyOwner {
+        isDoorman[account] = status;
+        emit DoormanStatusChanged(account, status);
+    }
+
+    /**
+     * @dev Returns role of an account as a string:
+     *  - "Venue" if owner
+     *  - "Doorman" if granted
+     *  - "Attendee" otherwise
+     */
+    function roleOf(address account) external view returns (string memory) {
+        if (account == owner()) {
+            return "Venue";
+        } else if (isDoorman[account]) {
+            return "Doorman";
+        } else {
+            return "Attendee";
+        }
     }
 }

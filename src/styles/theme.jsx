@@ -101,6 +101,19 @@ const theme = createTheme({
         },
       },
     },
+    MuiDialog: {
+      defaultProps: {
+        fullWidth: false,
+        maxWidth: false,
+      },
+      styleOverrides: {
+        paper: {
+          width: "30rem",   
+          maxWidth: "90vw", 
+          margin: "1rem",    
+        },
+      },
+    },
   },
 });
 

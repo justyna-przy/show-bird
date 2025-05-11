@@ -6,7 +6,7 @@ module.exports = {
   solidity: "0.8.23",
   networks: {
     sepolia: {
-      url: process.env.SEPOLIA_RPC,     
+      url: process.env.NEXT_PUBLIC_SEPOLIA_RPC,     
       accounts: [process.env.PRIVATE_KEY], // Private key of the wallet
     },
   },
