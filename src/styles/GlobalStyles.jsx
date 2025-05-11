@@ -4,10 +4,6 @@ import { GlobalStyles } from "@mui/material";
 const MyGlobalStyles = () => (
   <GlobalStyles
     styles={(theme) => ({
-      // Import the Google Font if needed (example remains here)
-      "@import":
-        'url("https://fonts.googleapis.com/css2?family=Sour+Gummy:wght@400;500;600;700&display=swap")',
-
       // Define the thin variant of Roca Two
       "@font-face": [
         {

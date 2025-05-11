@@ -1,5 +1,4 @@
 import { createTheme } from "@mui/material/styles";
-import { fonts } from "./fonts";
 
 const theme = createTheme({
   palette: {

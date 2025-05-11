@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Typography, TextField, Button, Chip } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Chip,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { ethers } from "ethers";
 import Image from "next/image";
 import { useWallet } from "@/hooks/useWallet";
@@ -29,15 +37,70 @@ const PIGEON_SHOW = {
 
 const Tickets = () => {
   const [qty, setQty] = useState(1);
-  const { address } = useWallet();
-  const total = (PIGEON_SHOW.price * qty).toFixed(2);
+
+  /* toast state */
+  const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
+  const show = (msg, sev = "info") => setToast({ open: true, msg, sev });
+
+  /* wallet context */
+  const {
+    address,
+    isConnected,
+    isAttendee,
+    provider,
+    contract,
+    signer, // TicketToken contract (read+write)
+  } = useWallet();
+
+  /* total in human + wei */
+  const totalEth = (PIGEON_SHOW.price * qty).toFixed(2);
+  const totalWei = PIGEON_SHOW.priceWei * BigInt(qty);
 
   const handleBuy = async () => {
-    if (!address) {
+    if (!contract) {
+      show("Provider not ready. Please try again in a second.", "warning");
+      return;
+    }
+    
+
+    if (!isConnected) {
+      // opens existing modal system
       document.dispatchEvent(new Event("open-connect-modal"));
       return;
     }
-    alert(`Pretend-buy ${qty} ticket(s) for ${total} ETH (addr: ${address})`);
+    if (!isAttendee) {
+      show("Only attendee wallets can buy tickets", "warning");
+      return;
+    }
+
+    try {
+      /* 1) balance check */
+      const bal = await provider.getBalance(address);
+      if (bal < totalWei) {
+        show("Insufficient ETH balance", "error");
+        return;
+      }
+
+      /* 2) purchase loop (contract mints one ticket per call) */
+      await provider.send("eth_requestAccounts", []); // open MetaMask if needed
+
+      // grab the ACTIVE signer (no address arg → never VoidSigner):
+      const activeSigner = provider.getSigner();
+
+      const write = contract.connect(activeSigner);
+
+      for (let i = 0; i < qty; i++) {
+        const tx = await write.buyTicket({ value: PIGEON_SHOW.priceWei });
+        await tx.wait();
+      }
+      show(
+        `Successfully bought ${qty} ticket${qty > 1 ? "s" : ""}!`,
+        "success"
+      );
+    } catch (e) {
+      console.error(e);
+      show("Transaction failed", "error");
+    }
   };
 
   return (
@@ -45,8 +108,8 @@ const Tickets = () => {
     <Box
       sx={{
         bgcolor: "#f5f5f5",
-        minHeight: "calc(100vh - 80px)", 
-        pt: "80px", 
+        minHeight: "calc(100vh - 80px)",
+        pt: "80px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -146,15 +209,35 @@ const Tickets = () => {
             />
 
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
-              Total: {total} ETH
+              Total: {totalEth} ETH
             </Typography>
 
-            <Button variant="contained" size="large" onClick={handleBuy}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleBuy}
+              disabled={!isConnected || !isAttendee}
+            >
               Buy Tickets
             </Button>
           </Box>
         </Box>
       </Box>
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setToast({ ...toast, open: false })}
+          severity={toast.sev}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {toast.msg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

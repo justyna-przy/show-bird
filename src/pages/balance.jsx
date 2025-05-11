@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, {useEffect} from "react";
 import { Box, Typography, Button, CircularProgress } from "@mui/material";
 import { useWallet } from "@/hooks/useWallet";
+import { useRouter } from "next/router";
 import AttendeeBalance from "@/components/AttendeeBalance";
 import DoormanBalance from "@/components/DoormanBalance";
 import VenueBalance from "@/components/VenueBalance";
@@ -16,17 +17,12 @@ export default function BalancePage() {
     isAttendee,
     connect,
   } = useWallet();
+  const router = useRouter();
 
   /* ───────── connect first ───────── */
-  if (!isConnected) {
-    return (
-      <Box textAlign="center" mt={8}>
-        <Button variant="contained" onClick={connect}>
-          Connect Wallet
-        </Button>
-      </Box>
-    );
-  }
+  useEffect(() => {
+    if (!isConnected) router.replace("/connect-wallet");
+  }, [isConnected, router]);
 
   /* ───────── wait for role lookup ───────── */
   if (loadingRoles) {

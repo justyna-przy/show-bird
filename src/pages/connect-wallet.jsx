@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -10,6 +10,7 @@ import { FaWallet, FaPlusCircle, FaDownload } from "react-icons/fa";
 import { useWallet } from "@/hooks/useWallet";
 import CreateWalletModal from "@/components/CreateWalletModal";
 import ImportWalletModal from "@/components/ImportWalletModal";
+import { useRouter } from "next/router";
 
 /**
  * A full-page component that lets the user:
@@ -21,6 +22,12 @@ export default function ConnectWallet() {
   const { address, connect, load } = useWallet();
   const [isCreating, setCreating] = useState(false);
   const [isImporting, setImporting] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (address) router.replace("/tickets");
+  }, [address, router]);
 
   return (
     <Box

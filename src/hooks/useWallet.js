@@ -11,48 +11,58 @@ import React, {
 import { ethers } from "ethers";
 import TicketAbi from "@/abi/TicketToken.json";
 
-const OWNER_ADDRESS = "0xYourDeployerAddressHere";          // 👈 change me
-const TOKEN_ADDR    = process.env.NEXT_PUBLIC_TICKET_TOKEN_ADDRESS;
-const RPC_URL       = process.env.NEXT_PUBLIC_SEPOLIA_RPC;
+const OWNER_ADDRESS = "0x6dac08d6de80289e311821f77f6fe859fff85605";
+const TOKEN_ADDR = process.env.NEXT_PUBLIC_TICKET_TOKEN_ADDRESS;
+const RPC_URL = process.env.NEXT_PUBLIC_SEPOLIA_RPC;
 
 const Ctx = createContext(null);
 
 export function WalletProvider({ children }) {
   /* -------------------------------------------------- wallet state */
-  const [address, setAddress]       = useState(null);
-  const [loadingRoles, setLoading]  = useState(true);
-  const [isVenue,   setVenue]       = useState(false);
-  const [isDoorman, setDoor]        = useState(false);
-  const [isAttendee,setAttend]      = useState(false);
+  const [address, setAddress] = useState(null);
+  const [loadingRoles, setLoading] = useState(true);
+  const [isVenue, setVenue] = useState(false);
+  const [isDoorman, setDoor] = useState(false);
+  const [isAttendee, setAttend] = useState(false);
 
   /* -------------------------------------------------- connect / disconnect */
   const connect = useCallback(async () => {
-    if (!window.ethereum) { alert("Install MetaMask"); return; }
-    const [acct] = await window.ethereum.request({ method: "eth_requestAccounts" });
+    if (!window.ethereum) {
+      alert("Install MetaMask");
+      return;
+    }
+    const [acct] = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
     setAddress(acct);
   }, []);
 
   const disconnect = useCallback(() => setAddress(null), []);
+  const load = useCallback((addr) => setAddress(addr), []);
 
   /* -------------------------------------------------- provider / signer */
-  const provider = useMemo(() => (
-    typeof window !== "undefined" && window.ethereum
-      ? new ethers.BrowserProvider(window.ethereum)
-      : new ethers.JsonRpcProvider(RPC_URL)
-  ), []);
+  const [provider, setProvider] = useState(null);
 
-  // signer only after a wallet is connected (avoids SSR “no such account”)
-  const signer = useMemo(() => (
-    address && typeof window !== "undefined"
-      ? provider.getSigner()
-      : null
-  ), [address, provider]);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.ethereum) {
+      setProvider(new ethers.BrowserProvider(window.ethereum));
+    } else {
+      setProvider(new ethers.JsonRpcProvider(RPC_URL));
+    }
+  }, []);
+
+  /* -------------------------------------------------- signer */
+  const signer = useMemo(() => {
+    if (!provider || !address) return null;
+    // BrowserProvider.getSigner() automatically picks the active account
+    return provider.getSigner();
+  }, [provider, address]);
 
   /* -------------------------------------------------- contract (read if no signer) */
   const contract = useMemo(() => {
-    if (!TOKEN_ADDR) throw new Error("Missing NEXT_PUBLIC_TICKET_TOKEN_ADDRESS");
+    if (!provider || !TOKEN_ADDR) return null;
     return new ethers.Contract(TOKEN_ADDR, TicketAbi.abi, signer || provider);
-  }, [signer, provider]);
+  }, [provider, signer]);
 
   /* -------------------------------------------------- role discovery */
   useEffect(() => {
@@ -60,13 +70,18 @@ export function WalletProvider({ children }) {
 
     async function loadRoles() {
       if (!address) {
-        alive && (setVenue(false), setDoor(false), setAttend(false), setLoading(false));
+        alive &&
+          (setVenue(false),
+          setDoor(false),
+          setAttend(false),
+          setLoading(false));
         return;
       }
 
       // venue == owner
       if (address.toLowerCase() === OWNER_ADDRESS.toLowerCase()) {
-        alive && (setVenue(true), setDoor(false), setAttend(false), setLoading(false));
+        alive &&
+          (setVenue(true), setDoor(false), setAttend(false), setLoading(false));
         return;
       }
 
@@ -83,7 +98,7 @@ export function WalletProvider({ children }) {
         if (!alive) return;
         setVenue(false);
         setDoor(false);
-        setAttend(true);          // graceful fallback
+        setAttend(true); // graceful fallback
       } finally {
         alive && setLoading(false);
       }
@@ -91,7 +106,9 @@ export function WalletProvider({ children }) {
 
     setLoading(true);
     loadRoles();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [address, contract, provider]);
 
   /* -------------------------------------------------- expose everything */
@@ -110,6 +127,7 @@ export function WalletProvider({ children }) {
     provider,
     signer,
     contract,
+    load,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

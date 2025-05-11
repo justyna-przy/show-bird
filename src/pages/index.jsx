@@ -3,7 +3,6 @@ import React from "react";
 import { useTheme } from "@mui/material/styles";
 import LandingIntro from "@/components/LandingIntro";
 import { Box, width } from "@mui/system";
-import Ticket from "@/components/Ticket";
 
 const Index = () => {
   const theme = useTheme();
