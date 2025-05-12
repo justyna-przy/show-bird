@@ -57,14 +57,8 @@ const Tickets = () => {
   const totalWei = PIGEON_SHOW.priceWei * BigInt(qty);
 
   const handleBuy = async () => {
-    if (!contract) {
-      show("Provider not ready. Please try again in a second.", "warning");
-      return;
-    }
-    
-
+    /* 0 — basic guards */
     if (!isConnected) {
-      // opens existing modal system
       document.dispatchEvent(new Event("open-connect-modal"));
       return;
     }
@@ -72,36 +66,49 @@ const Tickets = () => {
       show("Only attendee wallets can buy tickets", "warning");
       return;
     }
-
+    if (typeof window === "undefined" || !window.ethereum) {
+      show("No Ethereum provider found", "error");
+      return;
+    }
+  
     try {
-      /* 1) balance check */
-      const bal = await provider.getBalance(address);
+      /* 1 — make MetaMask expose an account */
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+  
+      /* 2 — fresh BrowserProvider & signer (always sign-capable) */
+      const browserProv = new ethers.BrowserProvider(window.ethereum);
+      const signer      = await browserProv.getSigner();      // JsonRpcSigner
+  
+      /* 3 — balance check */
+      const bal = await browserProv.getBalance(signer.address);
       if (bal < totalWei) {
         show("Insufficient ETH balance", "error");
         return;
       }
-
-      /* 2) purchase loop (contract mints one ticket per call) */
-      await provider.send("eth_requestAccounts", []); // open MetaMask if needed
-
-      // grab the ACTIVE signer (no address arg → never VoidSigner):
-      const activeSigner = provider.getSigner();
-
-      const write = contract.connect(activeSigner);
-
+  
+      /* 4 — brand-new contract wired to this signer */
+      const write = new ethers.Contract(
+        contract.target,          // address from your read instance
+        contract.interface,       // ABI
+        signer
+      );
+  
+      /* 5 — purchase loop */
       for (let i = 0; i < qty; i++) {
         const tx = await write.buyTicket({ value: PIGEON_SHOW.priceWei });
         await tx.wait();
       }
+  
       show(
         `Successfully bought ${qty} ticket${qty > 1 ? "s" : ""}!`,
         "success"
       );
-    } catch (e) {
-      console.error(e);
-      show("Transaction failed", "error");
+    } catch (err) {
+      console.error(err);
+      show("Transaction failed; see console for details.", "error");
     }
   };
+  
 
   return (
     // Full-screen wrapper with light grey bg
