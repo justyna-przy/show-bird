@@ -18,8 +18,8 @@ import theme from "@/styles/theme";
 // ----- single hard-coded ticket data -----
 const PIGEON_SHOW = {
   name: "Weekly Pigeon Show",
-  price: 0.05,
-  priceWei: ethers.parseEther("0.05"),
+  price: 0.005,
+  priceWei: ethers.parseEther("0.005"),
   info_tags: ["Every Friday", "7 pm - 9 pm", "Bird Plaza"],
   tags: ["birds", "live", "family"],
   image: "/images/pigeon-show2.png",

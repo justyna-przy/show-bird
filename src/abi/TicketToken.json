@@ -1,16 +1,21 @@
 {
-  "address": "0x3E25641055F69f1b96D50519D5B1Ae3fcCA53264",
+  "address": "0x3130AD2A172CB94C75b7C6BA89908dc9a2d28448",
   "abi": [
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "cap_",
-          "type": "uint256"
+          "internalType": "string",
+          "name": "name_",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "symbol_",
+          "type": "string"
         },
         {
           "internalType": "uint256",
-          "name": "priceWei_",
+          "name": "cap_",
           "type": "uint256"
         }
       ],
@@ -189,7 +194,7 @@
         {
           "indexed": false,
           "internalType": "bool",
-          "name": "isDoorman",
+          "name": "enabled",
           "type": "bool"
         }
       ],
@@ -213,6 +218,25 @@
         }
       ],
       "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "contractAddr",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "enabled",
+          "type": "bool"
+        }
+      ],
+      "name": "SalesContractChanged",
       "type": "event"
     },
     {
@@ -309,13 +333,6 @@
     },
     {
       "inputs": [],
-      "name": "buyTicket",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "cap",
       "outputs": [
         {
@@ -360,6 +377,24 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "mint",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "name",
       "outputs": [
@@ -386,16 +421,21 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "priceWei",
-      "outputs": [
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "amount",
           "type": "uint256"
         }
       ],
-      "stateMutability": "view",
+      "name": "redeem",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -428,12 +468,31 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "salesContracts",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "account",
           "type": "address"
         },
         {
           "internalType": "bool",
-          "name": "status",
+          "name": "enabled",
           "type": "bool"
         }
       ],
@@ -445,12 +504,17 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "newPriceWei",
-          "type": "uint256"
+          "internalType": "address",
+          "name": "contractAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "enabled",
+          "type": "bool"
         }
       ],
-      "name": "setPrice",
+      "name": "setSalesContract",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -543,19 +607,6 @@
         }
       ],
       "name": "transferOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address payable",
-          "name": "to",
-          "type": "address"
-        }
-      ],
-      "name": "withdraw",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
