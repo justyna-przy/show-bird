@@ -1,0 +1,9 @@
+{
+    "rewrites": [
+      {
+        "source": "/show-bird/:path*",
+        "destination": "https://show-bird.vercel.app/:path*"
+      }
+    ]
+  }
+  
