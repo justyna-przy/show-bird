@@ -23,6 +23,7 @@ export default function DashboardPage() {
   // Hooks
   const { isVenue } = useWallet();
   const {
+    saleRead,
     priceWei,
     totalSold,
     contractBalance,
@@ -92,11 +93,28 @@ export default function DashboardPage() {
 
   const handleWithdraw = async () => {
     try {
+      if (!saleRead) {
+        toast.error("Sale contract not ready");
+        return;
+      }
+
+      // See how much is actually withdrawable
+      const available = await saleRead.withdrawableWei();
+      if (available === 0n) {
+        toast.error("Nothing available to withdraw");
+        return;
+      }
+
+      // Send the real tx
       await withdrawFunds(withdrawAddr);
-      toast.success(`Funds withdrawn to ${withdrawAddr}`);
+
+      // Notify & (optionally) show amount
+      toast.success(
+        `Withdrew ${ethers.formatEther(available)} SETH to ${withdrawAddr}`
+      );
     } catch (e) {
       console.error(e);
-      toast.error("Withdrawal failed");
+      toast.error(e.reason || "Withdrawal failed");
     }
   };
 

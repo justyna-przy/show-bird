@@ -40,7 +40,6 @@ const Navbar = () => {
   // Navigation links
   const baseLinks     = [
     { title: "Home",    path: "/"        },
-    { title: "About",   path: "/about"   },
     { title: "Tickets", path: "/tickets" },
   ];
   const attendeeLinks = [
