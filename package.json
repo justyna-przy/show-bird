@@ -14,6 +14,7 @@
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
     "@openzeppelin/contracts": "^5.3.0",
+    "@yudiel/react-qr-scanner": "^2.3.1",
     "ethers": "^6.13.7",
     "next": "^14.2.26",
     "react": "^18.2.0",

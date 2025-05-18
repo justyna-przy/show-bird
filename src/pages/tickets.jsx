@@ -13,13 +13,12 @@ import {
 import { ethers } from "ethers";
 import Image from "next/image";
 import { useWallet } from "@/hooks/useWallet";
+import { useTicketSale } from "@/hooks/useTicketSale";
 import theme from "@/styles/theme";
 
 // ----- single hard-coded ticket data -----
 const PIGEON_SHOW = {
   name: "Weekly Pigeon Show",
-  price: 0.005,
-  priceWei: ethers.parseEther("0.005"),
   info_tags: ["Every Friday", "7 pm - 9 pm", "Bird Plaza"],
   tags: ["birds", "live", "family"],
   image: "/images/pigeon-show2.png",
@@ -42,63 +41,19 @@ const Tickets = () => {
   const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
   const show = (msg, sev = "info") => setToast({ open: true, msg, sev });
 
-  /* wallet context */
-  const {
-    address,
-    isConnected,
-    isAttendee,
-    provider,
-    contract,
-    signer, // TicketToken contract (read+write)
-  } = useWallet();
+  const { isConnected, isAttendee, connect } = useWallet();
+  const { priceWei, buyTickets }            = useTicketSale(); 
 
-  /* total in human + wei */
-  const totalEth = (PIGEON_SHOW.price * qty).toFixed(2);
-  const totalWei = PIGEON_SHOW.priceWei * BigInt(qty);
+  const totalWei = priceWei ? priceWei * BigInt(qty) : 0n;
+  const totalEth = priceWei
+    ? (Number(ethers.formatEther(priceWei)) * qty).toFixed(3)
+    : "...";
 
   const handleBuy = async () => {
-    /* 0 — basic guards */
-    if (!isConnected) {
-      document.dispatchEvent(new Event("open-connect-modal"));
-      return;
-    }
-    if (!isAttendee) {
-      show("Only attendee wallets can buy tickets", "warning");
-      return;
-    }
-    if (typeof window === "undefined" || !window.ethereum) {
-      show("No Ethereum provider found", "error");
-      return;
-    }
-  
+    if (!isConnected) return connect();
+
     try {
-      /* 1 — make MetaMask expose an account */
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-  
-      /* 2 — fresh BrowserProvider & signer (always sign-capable) */
-      const browserProv = new ethers.BrowserProvider(window.ethereum);
-      const signer      = await browserProv.getSigner();      // JsonRpcSigner
-  
-      /* 3 — balance check */
-      const bal = await browserProv.getBalance(signer.address);
-      if (bal < totalWei) {
-        show("Insufficient ETH balance", "error");
-        return;
-      }
-  
-      /* 4 — brand-new contract wired to this signer */
-      const write = new ethers.Contract(
-        contract.target,          // address from your read instance
-        contract.interface,       // ABI
-        signer
-      );
-  
-      /* 5 — purchase loop */
-      for (let i = 0; i < qty; i++) {
-        const tx = await write.buyTicket({ value: PIGEON_SHOW.priceWei });
-        await tx.wait();
-      }
-  
+      await buyTickets(qty, priceWei);
       show(
         `Successfully bought ${qty} ticket${qty > 1 ? "s" : ""}!`,
         "success"
@@ -108,7 +63,6 @@ const Tickets = () => {
       show("Transaction failed; see console for details.", "error");
     }
   };
-  
 
   return (
     // Full-screen wrapper with light grey bg
@@ -223,7 +177,7 @@ const Tickets = () => {
               variant="contained"
               size="large"
               onClick={handleBuy}
-              disabled={!isConnected || !isAttendee}
+              disabled={!priceWei || !isConnected || !isAttendee}
             >
               Buy Tickets
             </Button>

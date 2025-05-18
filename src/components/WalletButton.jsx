@@ -21,28 +21,31 @@ export default function WalletButton() {
   const {
     address,
     isConnected,
+    connect,
     disconnect,
-    loadingRoles,
+    loadingRole,
     isVenue,
     isDoorman,
     isAttendee,
   } = useWallet();
   const router = useRouter();
 
-  /* ────────────── Not connected ────────────── */
+  // Always call hooks before any returns:
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const close = () => setAnchorEl(null);
+
+  // 1) Not connected: show a connect button
   if (!isConnected) {
     return (
-      <Button
-        variant="contained"
-        onClick={() => router.push("/connect-wallet")}
-      >
+      <Button variant="contained" onClick={connect}>
         Connect&nbsp;Wallet
       </Button>
     );
   }
 
-  /* ────────────── Connected ────────────── */
-  const roleLabel = loadingRoles
+  // 2) Connected: show address + menu
+  const roleLabel = loadingRole
     ? "Loading…"
     : isVenue
     ? "Venue"
@@ -52,18 +55,14 @@ export default function WalletButton() {
     ? "Attendee"
     : "Unknown";
 
-  /*  anchor & copy helpers  */
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
   const handleOpen = (e) => setAnchorEl(e.currentTarget);
-  const handleClose = () => setAnchorEl(null);
   const copyAddr = async () => {
     await navigator.clipboard.writeText(address);
-    handleClose();
+    close();
   };
 
-  /*  menu width matches chip width  */
-  const menuWidth = anchorEl ? anchorEl.offsetWidth : undefined;
+  // keep menu width in sync with chip
+  const menuWidth = anchorEl?.offsetWidth;
 
   return (
     <>
@@ -75,32 +74,35 @@ export default function WalletButton() {
         }
         label={shorten(address)}
         onClick={handleOpen}
-        sx={{ cursor: "pointer", fontWeight: 600, height: "2.5rem", fontSize: "1rem", borderRadius: "1.5rem", paddingX: "0.5rem", paddingY: "0.5rem" }}
+        sx={{
+          cursor: "pointer",
+          fontWeight: 600,
+          height: "2.5rem",
+          fontSize: "1rem",
+          borderRadius: "1.5rem",
+          px: 1,
+        }}
       />
 
       <Menu
         anchorEl={anchorEl}
         open={open}
-        onClose={handleClose}
+        onClose={close}
         PaperProps={{ sx: { width: menuWidth } }}
-  
       >
-        {/* Role line – normal text */}
         <MenuItem disableRipple sx={{ pointerEvents: "none" }}>
           <Typography variant="body2">Role: {roleLabel}</Typography>
         </MenuItem>
 
-        {/* Copy with icon */}
         <MenuItem onClick={copyAddr}>
           <FaRegCopy style={{ marginRight: 8 }} />
           Copy&nbsp;Address
         </MenuItem>
 
-        {/* Disconnect */}
         <MenuItem
           onClick={() => {
             disconnect();
-            handleClose();
+            close();
           }}
         >
           Disconnect

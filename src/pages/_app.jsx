@@ -1,4 +1,3 @@
-// pages/_app.js
 import * as React from "react";
 import Head from "next/head";
 import { ThemeProvider, CssBaseline } from "@mui/material";
@@ -6,6 +5,7 @@ import theme from "@/styles/theme";
 import MyGlobalStyles from "@/styles/GlobalStyles";
 import Navbar from "@/components/Navbar";
 import { WalletProvider } from "@/hooks/useWallet";
+import Forbidden from "@/pages/403";
 
 export default function MyApp({ Component, pageProps }) {
   return (
@@ -23,21 +23,49 @@ export default function MyApp({ Component, pageProps }) {
       </Head>
 
       <WalletProvider>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: "100vh",
-          }}
-        >
-          <Navbar />
-
-          {/* flex-grow so it fills the rest of the viewport */}
-          <main style={{ flexGrow: 1, display: "flex" }}>
-            <Component {...pageProps} />
-          </main>
-        </div>
+        {/* single, guarded render */}
+        <GuardedLayout Component={Component} pageProps={pageProps} />
       </WalletProvider>
     </ThemeProvider>
+  );
+}
+
+/* ───────────────────────────────────────────────────────────── */
+
+import { useWallet } from "@/hooks/useWallet";
+import { useRouter } from "next/router";
+
+function GuardedLayout({ Component, pageProps }) {
+  const { isConnected, role, loadingRole } = useWallet();
+  const router = useRouter();
+
+  const allowed = Component.roles; // undefined ⇒ public
+
+  /* 🔄 redirect after connect / disconnect / role change */
+  React.useEffect(() => {
+    if (loadingRole) return; // still figuring things out
+
+    if (
+      allowed && // protected page
+      (!isConnected || !allowed.includes(role))
+    ) {
+      router.replace("/tickets"); // always safe & public
+    }
+  }, [allowed, isConnected, role, loadingRole, router]);
+
+  // If user pasted a protected URL while unauthenticated, show 403
+  if (allowed && (!isConnected || !allowed.includes(role))) {
+    return loadingRole ? null : <Forbidden />;
+  }
+
+  return (
+    <div
+      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+    >
+      <Navbar />
+      <main style={{ flexGrow: 1, display: "flex" }}>
+        <Component {...pageProps} />
+      </main>
+    </div>
   );
 }

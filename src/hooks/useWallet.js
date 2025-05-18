@@ -11,38 +11,19 @@ import React, {
 import { ethers } from "ethers";
 import TicketAbi from "@/abi/TicketToken.json";
 
-const OWNER_ADDRESS = "0x6dac08d6de80289e311821f77f6fe859fff85605";
-const TOKEN_ADDR = process.env.NEXT_PUBLIC_TICKET_TOKEN_ADDRESS;
 const RPC_URL = process.env.NEXT_PUBLIC_SEPOLIA_RPC;
+const OWNER_ADDRESS = process.env.NEXT_PUBLIC_VENUE_ADDRESS?.toLowerCase();
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TICKET_TOKEN_ADDRESS;
 
-const Ctx = createContext(null);
+const WalletCtx = createContext(null);
 
+/**
+ * <AuthWalletProvider> wraps _once_ high up (e.g. in _app.js)
+ * and provides connection / role / getSigner helpers.
+ */
 export function WalletProvider({ children }) {
-  /* -------------------------------------------------- wallet state */
-  const [address, setAddress] = useState(null);
-  const [loadingRoles, setLoading] = useState(true);
-  const [isVenue, setVenue] = useState(false);
-  const [isDoorman, setDoor] = useState(false);
-  const [isAttendee, setAttend] = useState(false);
-
-  /* -------------------------------------------------- connect / disconnect */
-  const connect = useCallback(async () => {
-    if (!window.ethereum) {
-      alert("Install MetaMask");
-      return;
-    }
-    const [acct] = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    setAddress(acct);
-  }, []);
-
-  const disconnect = useCallback(() => setAddress(null), []);
-  const load = useCallback((addr) => setAddress(addr), []);
-
-  /* -------------------------------------------------- provider / signer */
+  // ---------- provider ----------
   const [provider, setProvider] = useState(null);
-
   useEffect(() => {
     if (typeof window !== "undefined" && window.ethereum) {
       setProvider(new ethers.BrowserProvider(window.ethereum));
@@ -51,86 +32,94 @@ export function WalletProvider({ children }) {
     }
   }, []);
 
-  /* -------------------------------------------------- signer */
-  const signer = useMemo(() => {
-    if (!provider || !address) return null;
-    // BrowserProvider.getSigner() automatically picks the active account
-    return provider.getSigner();
-  }, [provider, address]);
+  // ---------- wallet address ----------
+  const [address, setAddress] = useState(null);
+  const connect = useCallback(async () => {
+    if (!window.ethereum) return alert("Install MetaMask");
+    const [acct] = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    setAddress(acct);
+  }, []);
+  const disconnect = useCallback(() => setAddress(null), []);
 
-  /* -------------------------------------------------- contract (read if no signer) */
-  const contract = useMemo(() => {
-    if (!provider || !TOKEN_ADDR) return null;
-    return new ethers.Contract(TOKEN_ADDR, TicketAbi.abi, signer || provider);
-  }, [provider, signer]);
+  // ---------- role ----------
+  const [role, setRole] = useState("Attendee"); // default
+  const [loadingRole, setLoadingRole] = useState(true);
 
-  /* -------------------------------------------------- role discovery */
+  /** Called by sub-hooks that know Token ABI so we don’t couple here */
   useEffect(() => {
-    let alive = true;
-
-    async function loadRoles() {
-      if (!address) {
-        alive &&
-          (setVenue(false),
-          setDoor(false),
-          setAttend(false),
-          setLoading(false));
-        return;
-      }
-
-      // venue == owner
-      if (address.toLowerCase() === OWNER_ADDRESS.toLowerCase()) {
-        alive &&
-          (setVenue(true), setDoor(false), setAttend(false), setLoading(false));
-        return;
-      }
-
-      try {
-        // call through read-only runner to avoid signer issues
-        const roContract = contract.connect(provider);
-        const door = await roContract.isDoorman(address);
-        if (!alive) return;
-        setVenue(false);
-        setDoor(door);
-        setAttend(!door);
-      } catch (e) {
-        console.warn("isDoorman() failed, defaulting to Attendee", e);
-        if (!alive) return;
-        setVenue(false);
-        setDoor(false);
-        setAttend(true); // graceful fallback
-      } finally {
-        alive && setLoading(false);
-      }
+    if (!address || !provider) {
+      setRole("Attendee");
+      setLoadingRole(false);
+      return;
     }
 
-    setLoading(true);
-    loadRoles();
-    return () => {
-      alive = false;
-    };
-  }, [address, contract, provider]);
+    let ignore = false;
+    (async () => {
+      try {
+        if (address.toLowerCase() === OWNER_ADDRESS) {
+          setRole("Venue");
+        } else {
+          const token = new ethers.Contract(
+            TOKEN_ADDRESS,
+            TicketAbi.abi,
+            provider
+          );
+          const r = await token.roleOf(address);
+          if (!ignore) setRole(r);
+        }
+      } catch (e) {
+        console.error("role fetch failed:", e);
+        if (!ignore) setRole("Attendee");
+      } finally {
+        if (!ignore) setLoadingRole(false);
+      }
+    })();
 
-  /* -------------------------------------------------- expose everything */
+    return () => {
+      ignore = true;
+    };
+  }, [address, provider]);
+
+  // ---------- signer helper ----------
+  const getSigner = useCallback(async () => {
+    let prov = provider;
+    if (!prov) {
+      if (typeof window === "undefined" || !window.ethereum) {
+        throw new Error("No injected provider");
+      }
+      prov = new ethers.BrowserProvider(window.ethereum);
+      setProvider(prov); // cache
+    }
+    await prov.send("eth_requestAccounts", []);
+    return prov.getSigner();
+  }, [provider]);
+
   const value = {
-    // wallet
+    // connection
+    provider,
     address,
     isConnected: !!address,
     connect,
     disconnect,
-    // roles
-    loadingRoles,
-    isVenue,
-    isDoorman,
-    isAttendee,
-    // ethers goodies
-    provider,
-    signer,
-    contract,
-    load,
+
+    // role
+    role,
+    loadingRole,
+    isVenue: role === "Venue",
+    isDoorman: role === "Doorman",
+    isAttendee: role === "Attendee",
+
+    // signer factory
+    getSigner,
   };
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <WalletCtx.Provider value={value}>{children}</WalletCtx.Provider>;
 }
 
-export const useWallet = () => useContext(Ctx);
+export const useWallet = () => {
+  const ctx = useContext(WalletCtx);
+  if (!ctx) throw new Error("useWallet must be inside <WalletProvider>");
+  return ctx;
+};

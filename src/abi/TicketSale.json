@@ -1,5 +1,5 @@
 {
-  "address": "0x5D7aa5653F77A2dF2Cd48cf3aC1Ef9D2aC685BA8",
+  "address": "0xB6C81bEc9CA5531fcFdE091C12c04Ad4f71E5Ff2",
   "abi": [
     {
       "inputs": [
@@ -43,6 +43,25 @@
       ],
       "name": "OwnableUnauthorizedAccount",
       "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "weiAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "FundsWithdrawn",
+      "type": "event"
     },
     {
       "anonymous": false,
@@ -107,6 +126,25 @@
         {
           "indexed": true,
           "internalType": "address",
+          "name": "attendee",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "qty",
+          "type": "uint256"
+        }
+      ],
+      "name": "TicketsRedeemed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
           "name": "buyer",
           "type": "address"
         },
@@ -119,7 +157,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "refundAmount",
+          "name": "refundWei",
           "type": "uint256"
         }
       ],
@@ -198,6 +236,24 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "attendee",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "qty",
+          "type": "uint256"
+        }
+      ],
+      "name": "redeemTickets",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "refundPercentage",
       "outputs": [
@@ -245,7 +301,33 @@
     },
     {
       "inputs": [],
+      "name": "totalRedeemed",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "totalSold",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalWithdrawn",
       "outputs": [
         {
           "internalType": "uint256",
