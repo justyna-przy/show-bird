@@ -37,6 +37,8 @@ export default function DashboardPage() {
     getRecentPurchases,
     setPrice,
     withdrawFunds,
+    revenueWei,
+    purchased,
   } = useTicketSale();
   const { assignDoorman } = useTicketToken();
   const theme = useTheme();
@@ -73,10 +75,7 @@ export default function DashboardPage() {
 
   /* ─── derived numbers ─────────────────────────────────── */
   const priceEth = priceWei ? ethers.formatEther(priceWei) : "0";
-  const revenueEth =
-    priceWei && totalSold
-      ? ethers.formatEther(priceWei * totalSold) // BigInt math
-      : "0";
+  const revenueEth = revenueWei ? ethers.formatEther(revenueWei) : "0";
   const balanceEth = contractBalance
     ? ethers.formatEther(contractBalance)
     : "0";
@@ -151,7 +150,7 @@ export default function DashboardPage() {
             >
               Ticket Price
             </Typography>
-            <Typography variant="h4" fontWeight={500} color="white">
+            <Typography variant="h5" fontWeight={500} color="white">
               {priceEth} SETH
             </Typography>
           </Box>
@@ -163,7 +162,30 @@ export default function DashboardPage() {
             >
               Total Sold
             </Typography>
-            <Typography variant="h4" fontWeight={500} color="white">
+            <Typography variant="h5" fontWeight={500} color="white">
+              {totalSold?.toString() ?? "0"}
+            </Typography>
+          </Box>
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Typography
+              variant="subtitle1"
+              sx={{ color: "white", fontWeight: 600 }}
+            >
+              Lifetime Sold
+            </Typography>
+            <Typography variant="h5" color="white">
+              {purchased?.toString() ?? "0"}
+            </Typography>
+          </Box>
+
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Typography
+              variant="subtitle1"
+              sx={{ color: "white", fontWeight: 600 }}
+            >
+              Outstanding
+            </Typography>
+            <Typography variant="h5" color="white">
               {totalSold?.toString() ?? "0"}
             </Typography>
           </Box>
@@ -175,7 +197,7 @@ export default function DashboardPage() {
             >
               Revenue
             </Typography>
-            <Typography variant="h4" fontWeight={500} color="white">
+            <Typography variant="h5" fontWeight={500} color="white">
               {revenueEth} SETH
             </Typography>
           </Box>
@@ -187,7 +209,7 @@ export default function DashboardPage() {
             >
               Contract Balance
             </Typography>
-            <Typography variant="h4" fontWeight={500} color="white">
+            <Typography variant="h5" fontWeight={500} color="white">
               {balanceEth} SETH
             </Typography>
           </Box>
@@ -226,7 +248,13 @@ export default function DashboardPage() {
 
         <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
 
-        <Box display="flex" flexDirection="column" gap={2} justifyContent="center" padding={2}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          gap={2}
+          justifyContent="center"
+          padding={2}
+        >
           <Typography variant="h5" gutterBottom>
             10 Most Recent Purchases
           </Typography>
@@ -237,7 +265,6 @@ export default function DashboardPage() {
               width: 400,
               border: "none",
               boxShadow: 0,
-
             }}
           >
             <Table size="small">

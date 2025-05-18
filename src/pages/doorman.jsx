@@ -15,27 +15,27 @@ import {
 } from "@mui/material";
 import { ethers } from "ethers";
 
-import { useWallet }      from "@/hooks/useWallet";
-import { useTicketSale }  from "@/hooks/useTicketSale";
+import { useWallet } from "@/hooks/useWallet";
+import { useTicketSale } from "@/hooks/useTicketSale";
 import { useTicketToken } from "@/hooks/useTicketToken";
 
 export default function DoormanPage() {
   /* ------------------------------------------------------------------ */
   /*  Wallet + contracts                                                */
   /* ------------------------------------------------------------------ */
-  const { isConnected } = useWallet();
-  const { saleRead, redeemTickets, priceWei } = useTicketSale();   // saleRead may be null
+  const { isConnected, getSigner } = useWallet();
+  const { saleRead, redeemTickets, priceWei } = useTicketSale(); // saleRead may be null
   const { tokenRead } = useTicketToken(); // tokenRead may be null
 
   /* ------------------------------------------------------------------ */
   /*  Local state                                                       */
   /* ------------------------------------------------------------------ */
-  const [addr, setAddr]       = useState("");
-  const [redeemable, setRed]  = useState(null);
-  const [qty, setQty]         = useState(1);
-  const [toast, setToast]     = useState({ open:false, msg:"", sev:"info" });
+  const [addr, setAddr] = useState("");
+  const [redeemable, setRed] = useState(null);
+  const [qty, setQty] = useState(1);
+  const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
 
-  const notify = (msg, sev="success") => setToast({ open:true, msg, sev });
+  const notify = (msg, sev = "success") => setToast({ open: true, msg, sev });
 
   /* ------------------------------------------------------------------ */
   /*  Pull redeemable count                                             */
@@ -54,7 +54,9 @@ export default function DoormanPage() {
         if (!ignore) setRed(null);
       }
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [addr, tokenRead]);
 
   /* ------------------------------------------------------------------ */
@@ -67,13 +69,13 @@ export default function DoormanPage() {
         return;
       }
 
-      // dry-run first – gets revert reason
-      await saleRead.callStatic.redeemTickets(addr, qty);
+      const signer = await getSigner(); 
+      await saleRead.connect(signer).redeemTickets.staticCall(addr, qty);
 
       await redeemTickets(addr, qty);
-      notify(`Redeemed ${qty} ticket${qty>1?"s":""}`);
+      notify(`Redeemed ${qty} ticket${qty > 1 ? "s" : ""}`);
 
-      const raw = await tokenRead.balanceOf(addr); 
+      const raw = await tokenRead.balanceOf(addr);
       setRed(Number(raw));
       setQty(1);
       notify("Redeem successful", "success");
@@ -96,7 +98,6 @@ export default function DoormanPage() {
     );
   }
 
-
   return (
     <>
       <Box p={4}>
@@ -104,8 +105,10 @@ export default function DoormanPage() {
           Doorman — Redeem Tickets
         </Typography>
 
-        <Card sx={{ maxWidth:480, boxShadow:4 }}>
-          <CardContent sx={{ display:"flex", flexDirection:"column", gap:2 }}>
+        <Card sx={{ maxWidth: 480, boxShadow: 4 }}>
+          <CardContent
+            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          >
             <Typography variant="subtitle1">Attendee wallet</Typography>
             <TextField
               label="0x… address"
@@ -114,7 +117,7 @@ export default function DoormanPage() {
               onChange={(e) => setAddr(e.target.value.trim())}
             />
 
-            <Divider sx={{ my:1 }} />
+            <Divider sx={{ my: 1 }} />
 
             <Typography>
               Redeemable (purchased) tickets:&nbsp;{redeemable ?? "…"}
@@ -126,7 +129,7 @@ export default function DoormanPage() {
               size="small"
               value={qty}
               onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-              inputProps={{ min:1, max:redeemable ?? 1 }}
+              inputProps={{ min: 1, max: redeemable ?? 1 }}
             />
 
             {priceWei && (
@@ -156,14 +159,14 @@ export default function DoormanPage() {
       <Snackbar
         open={toast.open}
         autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open:false })}
-        anchorOrigin={{ vertical:"bottom", horizontal:"right" }}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
-          onClose={() => setToast({ ...toast, open:false })}
+          onClose={() => setToast({ ...toast, open: false })}
           severity={toast.sev}
           variant="filled"
-          sx={{ width:"100%" }}
+          sx={{ width: "100%" }}
         >
           {toast.msg}
         </Alert>

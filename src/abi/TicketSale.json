@@ -1,5 +1,5 @@
 {
-  "address": "0x6d5b8E31b00f3A272816Da7FEd34f7bFe376997c",
+  "address": "0xc87E2babe79eEb58274585BBF7a081C0d1Fbc03b",
   "abi": [
     {
       "inputs": [
@@ -113,7 +113,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "totalPrice",
+          "name": "weiPaid",
           "type": "uint256"
         }
       ],
@@ -157,25 +157,12 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "refundWei",
+          "name": "weiBack",
           "type": "uint256"
         }
       ],
       "name": "TicketsRefunded",
       "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "availableTickets",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
     },
     {
       "inputs": [
@@ -188,6 +175,19 @@
       "name": "buyTickets",
       "outputs": [],
       "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "contractBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -314,6 +314,19 @@
     },
     {
       "inputs": [],
+      "name": "totalPurchasedTickets",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "totalRedeemed",
       "outputs": [
         {
@@ -327,7 +340,33 @@
     },
     {
       "inputs": [],
-      "name": "totalSold",
+      "name": "totalRefundedTickets",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalRevenueWei",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSoldOutstanding",
       "outputs": [
         {
           "internalType": "uint256",
@@ -368,7 +407,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "newPriceWei",
+          "name": "newWei",
           "type": "uint256"
         }
       ],
@@ -388,6 +427,19 @@
       "name": "withdrawFunds",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdrawableWei",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     }
   ]

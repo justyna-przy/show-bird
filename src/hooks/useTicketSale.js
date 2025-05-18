@@ -21,7 +21,9 @@ export function useTicketSale() {
 
   // ----- live stats -----
   const [priceWei, setPriceWei] = useState(null);
-  const [totalSold, setTotalSold] = useState(null);
+  const [totalSold, setTotalSold] = useState(null); // outstanding
+  const [purchased, setPurchased] = useState(null); // lifetime
+  const [revenueWei, setRevenueWei] = useState(null);
   const [contractBalance, setContractBalance] = useState(null);
   const [refundPct, setRefundPct] = useState(null);
 
@@ -30,9 +32,11 @@ export function useTicketSale() {
     let stale = false;
     const pull = async () => {
       try {
-        const [p, ts, bal, rp] = await Promise.all([
+        const [p, ts, pu, rev, bal, rp] = await Promise.all([
           saleRead.priceWei(),
-          saleRead.totalSold(),
+          saleRead.totalSoldOutstanding(),
+          saleRead.totalPurchasedTickets(),
+          saleRead.totalRevenueWei(),
           provider.getBalance(SALE_ADDRESS),
           saleRead.refundPercentage(),
         ]);
@@ -41,6 +45,8 @@ export function useTicketSale() {
           setTotalSold(ts);
           setContractBalance(bal);
           setRefundPct(Number(rp));
+          setPurchased(pu);
+          setRevenueWei(rev);
         }
       } catch (e) {
         console.warn("sale stats failed:", e);
@@ -134,13 +140,16 @@ export function useTicketSale() {
     [getSigner, saleRead]
   );
 
-  const selfRedeem = useCallback(async (qty) => {
-    if (!saleRead?.selfRedeem) throw new Error("ABI missing selfRedeem");
-    const signer   = await getSigner();
-    const contract = saleRead.connect(signer);
-    const tx       = await contract.selfRedeem(qty);
-    await tx.wait();
-  }, [getSigner, saleRead]);
+  const selfRedeem = useCallback(
+    async (qty) => {
+      if (!saleRead?.selfRedeem) throw new Error("ABI missing selfRedeem");
+      const signer = await getSigner();
+      const contract = saleRead.connect(signer);
+      const tx = await contract.selfRedeem(qty);
+      await tx.wait();
+    },
+    [getSigner, saleRead]
+  );
 
   return {
     saleRead,
@@ -148,13 +157,16 @@ export function useTicketSale() {
     totalSold,
     contractBalance,
     refundPct,
+    saleRead,
+    purchased,
+    revenueWei,
 
     buyTickets,
     setPrice,
     withdrawFunds,
     refundTickets,
     getRecentPurchases,
-    redeemTickets,   // doorman
-    selfRedeem,   // attendee
+    redeemTickets, // doorman
+    selfRedeem, // attendee
   };
 }
