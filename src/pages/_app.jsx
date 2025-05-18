@@ -7,6 +7,8 @@ import Navbar from "@/components/Navbar";
 import { WalletProvider } from "@/hooks/useWallet";
 import Forbidden from "@/pages/403";
 import { ToastProvider } from "@/components/ToastContext";
+import { useWallet } from "@/hooks/useWallet";
+import { useRouter } from "next/router";
 
 export default function MyApp({ Component, pageProps }) {
   return (
@@ -32,30 +34,22 @@ export default function MyApp({ Component, pageProps }) {
   );
 }
 
-/* ───────────────────────────────────────────────────────────── */
-
-import { useWallet } from "@/hooks/useWallet";
-import { useRouter } from "next/router";
-
+// This component is responsible for guarding restricted pages
+// and redirecting users to the appropriate page based on their authentication status.
 function GuardedLayout({ Component, pageProps }) {
   const { isConnected, role, loadingRole } = useWallet();
   const router = useRouter();
+  const allowed = Component.roles;
 
-  const allowed = Component.roles; // undefined ⇒ public
-
-  /* 🔄 redirect after connect / disconnect / role change */
+  // Redirects to the tickets page if the user is not authenticated
   React.useEffect(() => {
-    if (loadingRole) return; // still figuring things out
+    if (loadingRole) return;
 
-    if (
-      allowed && // protected page
-      (!isConnected || !allowed.includes(role))
-    ) {
-      router.replace("/tickets"); // always safe & public
+    if (allowed && (!isConnected || !allowed.includes(role))) {
+      router.replace("/tickets");
     }
   }, [allowed, isConnected, role, loadingRole, router]);
 
-  // If user pasted a protected URL while unauthenticated, show 403
   if (allowed && (!isConnected || !allowed.includes(role))) {
     return loadingRole ? null : <Forbidden />;
   }

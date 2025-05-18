@@ -4,46 +4,37 @@ pragma solidity ^0.8.23;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./TicketToken.sol";
 
+
 /**
- * TicketSale v2
- *
- * ── public counters ─────────────────────────────────────────────
- * • priceWei                     – current ticket price
- * • totalPurchasedTickets        – lifetime tickets sold
- * • totalSoldOutstanding         – tickets still in circulation
- * • totalRedeemed                – tickets checked-in by doormen
- * • totalRefundedTickets         – tickets given back for a refund
- * • totalRevenueWei              – lifetime revenue (buys − refunds)
- * • contractBalance()            – ETH currently held by this contract
- * • withdrawableWei()            – ETH the venue may withdraw right now
- *
+ * @title TicketSale
+ * @dev This contract manages the sale of tickets, including purchasing,
+ * refunding, and redeeming tickets. It also handles the pricing and
+ * withdrawal of funds.
  * The venue can **only** withdraw ETH that corresponds to redeemed
  * tickets; ETH needed for possible future refunds always stays locked.
  */
 contract TicketSale is Ownable {
     TicketToken public immutable token;
-    uint256 public priceWei; // current price
-    uint256 public refundPercentage; // e.g. 80 = 80 %
+    uint256 public priceWei;
+    uint256 public refundPercentage; 
 
-    /* ── lifetime accounting ─────────────────────────── */
     uint256 public totalPurchasedTickets;
     uint256 public totalRefundedTickets;
     uint256 public totalRedeemed; // checked-in
     uint256 public totalRevenueWei; // buys − refunds   (↔ lifetime gross)
 
-    /* ── running state ──────────────────────────────── */
-    mapping(address => uint256) public purchases; // assists refunds
+    // Running state
+    mapping(address => uint256) public purchases; 
     uint256 public totalSoldOutstanding; // = purchased – refunded – redeemed
-    uint256 public totalWithdrawn; // wei already pulled out
+    uint256 public totalWithdrawn; 
 
-    /* ── events ─────────────────────────────────────── */
+    // Events
     event TicketsPurchased(address indexed buyer, uint256 qty, uint256 weiPaid);
     event TicketsRefunded(address indexed buyer, uint256 qty, uint256 weiBack);
     event TicketsRedeemed(address indexed attendee, uint256 qty);
     event PriceUpdated(uint256 newPriceWei);
     event FundsWithdrawn(address indexed to, uint256 weiAmount);
 
-    /* ── constructor ───────────────────────────────── */
     constructor(
         address tokenAddress,
         uint256 priceWei_,
@@ -61,7 +52,7 @@ contract TicketSale is Ownable {
         refundPercentage = refundPct;
     }
 
-    /* ── buy ────────────────────────────────────────── */
+    /// @notice Purchase tickets of `qty` amount
     function buyTickets(uint256 qty) external payable {
         require(qty > 0, "TicketSale: qty 0");
         uint256 cost = priceWei * qty;
@@ -77,7 +68,7 @@ contract TicketSale is Ownable {
         emit TicketsPurchased(msg.sender, qty, cost);
     }
 
-    /* ── refund (user-initiated) ────────────────────── */
+    /// @notice Refund tickets of `qty` amount
     function refundTickets(uint256 qty) external {
         require(qty > 0, "TicketSale: qty 0");
         require(purchases[msg.sender] >= qty, "TicketSale: not owned");
@@ -98,7 +89,7 @@ contract TicketSale is Ownable {
         emit TicketsRefunded(msg.sender, qty, refundWei);
     }
 
-    /* ── redeem at the door (doorman) ───────────────── */
+    /// @notice Doorman can redeem tickets for attendees
     function redeemTickets(address attendee, uint256 qty) external {
         require(token.isDoorman(msg.sender), "TicketSale: !doorman");
         require(qty > 0, "TicketSale: qty 0");
@@ -113,7 +104,7 @@ contract TicketSale is Ownable {
         emit TicketsRedeemed(attendee, qty);
     }
 
-    /* ── self-redeem (attendee) ─────────────────────── */
+    /// @notice Attendee can redeem their own tickets
     function selfRedeem(uint256 qty) external {
         require(qty > 0, "TicketSale: qty 0");
         require(purchases[msg.sender] >= qty, "TicketSale: not owned");
@@ -127,15 +118,15 @@ contract TicketSale is Ownable {
         emit TicketsRedeemed(msg.sender, qty);
     }
 
-    /* ── owner ops ──────────────────────────────────── */
+    /// @notice Owner can update the ticket price
     function updatePrice(uint256 newWei) external onlyOwner {
         require(newWei > 0, "TicketSale: price 0");
         priceWei = newWei;
         emit PriceUpdated(newWei);
     }
 
-    /** Withdraw **only** the ETH that corresponds to redeemed tickets.
-     * Locked formula:  price × totalRedeemed  – alreadyWithdrawn */
+    //// @notice Owner can withdraw ETH from the contract
+    /// @dev Only withdraws ETH that corresponds to redeemed tickets
     function withdrawFunds(address payable to) external onlyOwner {
         uint256 unlocked = priceWei * totalRedeemed;
         require(unlocked > totalWithdrawn, "TicketSale: nothing yet");
@@ -149,11 +140,12 @@ contract TicketSale is Ownable {
         emit FundsWithdrawn(to, amount);
     }
 
-    /* ── helpers / views ────────────────────────────── */
+    /// @notice returns the current contract balance
     function contractBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
+    /// @notice returns the total amount of ETH that can be withdrawn
     function withdrawableWei() external view returns (uint256) {
         uint256 unlocked = priceWei * totalRedeemed;
         return unlocked > totalWithdrawn ? unlocked - totalWithdrawn : 0;

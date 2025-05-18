@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useWallet } from "./useWallet";
@@ -8,7 +6,7 @@ import TokenAbi from "@/abi/TicketToken.json";
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TICKET_TOKEN_ADDRESS;
 
 /**
- * Token-centric helpers: assignDoorman, redeemTickets (if you add it later).
+ * Token-centric context. 
  */
 export function useTicketToken() {
   const {
@@ -35,8 +33,6 @@ export function useTicketToken() {
     },
     [isVenue, tokenRead, getSigner]
   );
-
-  // add redeemTickets, mintBatch, etc. here if needed
 
   return { tokenRead, assignDoorman };
 }

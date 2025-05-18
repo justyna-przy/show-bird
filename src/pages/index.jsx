@@ -1,12 +1,8 @@
-import { Typography } from "@mui/material";
 import React from "react";
-import { useTheme } from "@mui/material/styles";
 import LandingIntro from "@/components/LandingIntro";
-import { Box, width } from "@mui/system";
+import { Box } from "@mui/system";
 
 const Index = () => {
-  const theme = useTheme();
-
   return (
     <>
       <Box
@@ -18,9 +14,6 @@ const Index = () => {
       >
         <LandingIntro />
       </Box>
-      
-      
-
     </>
   );
 };

@@ -1,12 +1,7 @@
-// pages/dashboard.js   (or pages/dashboard.jsx)
-"use client";
-
 import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
-  TextField,
-  Button,
   TableContainer,
   Table,
   TableHead,
@@ -14,13 +9,10 @@ import {
   TableCell,
   TableBody,
   Paper,
-  Snackbar,
-  Alert,
-  Grid,
   Divider,
 } from "@mui/material";
 import { ethers } from "ethers";
-
+import { useToast } from "@/components/ToastContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useTicketSale } from "@/hooks/useTicketSale";
 import { useTicketToken } from "@/hooks/useTicketToken";
@@ -28,8 +20,8 @@ import { useTheme } from "@mui/material/styles";
 import SetterCard from "@/components/SetterCard";
 
 export default function DashboardPage() {
-  /* ─── data & actions from hooks ────────────────────────── */
-  const { isConnected, isVenue } = useWallet();
+  // Hooks
+  const { isVenue } = useWallet();
   const {
     priceWei,
     totalSold,
@@ -42,77 +34,72 @@ export default function DashboardPage() {
   } = useTicketSale();
   const { assignDoorman } = useTicketToken();
   const theme = useTheme();
+  const toast = useToast();
 
-  /* ─── local UI state ───────────────────────────────────── */
+  // Local state
   const [recent, setRecent] = useState([]);
   const [newPrice, setNewPrice] = useState("");
   const [doormanAddr, setDoormanAddr] = useState("");
   const [withdrawAddr, setWithdrawAddr] = useState("");
-  const [toast, setToast] = useState({
-    open: false,
-    msg: "",
-    severity: "info",
-  });
-  const notify = (msg, severity = "success") =>
-    setToast({ open: true, msg, severity });
 
+  // Prefilled skeleton rows
   const skeletonRows = Array.from({ length: 10 }, (_, i) => ({
     buyer: "—",
     qty: "—",
     timestamp: "—",
     key: `sk${i}`,
   }));
-  /* ─── recent purchases ─────────────────────────────────── */
+
+  // Retrieve recent purchases when the component mounts
   useEffect(() => {
     if (!isVenue) return;
     getRecentPurchases(10)
       .then(setRecent)
       .catch((e) => {
         console.error(e);
-        notify("Failed to load recent purchases", "error");
+        toast.error("Failed to fetch recent purchases");
       });
-  }, [isVenue, getRecentPurchases]);
+  }, [isVenue, getRecentPurchases, toast]);
 
-  /* ─── derived numbers ─────────────────────────────────── */
+  // Format values
   const priceEth = priceWei ? ethers.formatEther(priceWei) : "0";
   const revenueEth = revenueWei ? ethers.formatEther(revenueWei) : "0";
   const balanceEth = contractBalance
     ? ethers.formatEther(contractBalance)
     : "0";
 
-  /* ─── handlers ─────────────────────────────────────────── */
+  // Handlers
   const handleSetPrice = async () => {
     try {
       const wei = ethers.parseEther(newPrice);
       await setPrice(wei);
-      notify(`Price updated to ${newPrice} SETH`);
+      toast.success(`Price updated to ${newPrice} SETH`);
     } catch (e) {
       console.error(e);
-      notify("Failed to update price", "error");
+      toast.error("Failed to set price");
     }
   };
 
   const handleAssignDoorman = async () => {
     try {
       await assignDoorman(doormanAddr, true);
-      notify(`Doorman role granted to ${doormanAddr}`);
+      toast.success(`Doorman role granted to ${doormanAddr}`);
     } catch (e) {
       console.error(e);
-      notify("Failed to assign doorman", "error");
+      toast.error("Failed to assign doorman");
     }
   };
 
   const handleWithdraw = async () => {
     try {
       await withdrawFunds(withdrawAddr);
-      notify(`Funds withdrawn to ${withdrawAddr}`);
+      toast.success(`Funds withdrawn to ${withdrawAddr}`);
     } catch (e) {
       console.error(e);
-      notify("Withdrawal failed", "error");
+      toast.error("Withdrawal failed");
     }
   };
 
-  /* ─── UI ──────────────────────────────────────────────── */
   return (
     <Box
       display="flex"
@@ -135,7 +122,6 @@ export default function DashboardPage() {
           alignItems: "center",
         }}
       >
-        {/* 3 sections, stats, operations, 10 most recent */}
         <Box
           display="flex"
           flexDirection="column"
@@ -297,23 +283,6 @@ export default function DashboardPage() {
           </TableContainer>
         </Box>
       </Box>
-
-      {/* Toast */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {toast.msg}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

@@ -1,6 +1,3 @@
-// components/WalletButton.jsx
-"use client";
-
 import React, { useState } from "react";
 import {
   Chip,
@@ -18,10 +15,10 @@ import { useWallet } from "@/hooks/useWallet";
 const shorten = (addr) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
 export default function WalletButton() {
+  // Hooks
   const {
     address,
     isConnected,
-    connect,
     disconnect,
     loadingRole,
     isVenue,
@@ -30,7 +27,7 @@ export default function WalletButton() {
   } = useWallet();
   const router = useRouter();
 
-  // Always call hooks before any returns:
+  // Local state
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const close = () => setAnchorEl(null);
@@ -83,7 +80,6 @@ export default function WalletButton() {
           px: 1,
         }}
       />
-
       <Menu
         anchorEl={anchorEl}
         open={open}
@@ -91,14 +87,12 @@ export default function WalletButton() {
         PaperProps={{ sx: { width: menuWidth } }}
       >
         <MenuItem disableRipple sx={{ pointerEvents: "none" }}>
-          <Typography variant="body2">Role: {roleLabel}</Typography>
+          <Typography variant="body2" fontSize="1rem">Role: {roleLabel}</Typography>
         </MenuItem>
-
         <MenuItem onClick={copyAddr}>
           <FaRegCopy style={{ marginRight: 8 }} />
           Copy&nbsp;Address
         </MenuItem>
-
         <MenuItem
           onClick={() => {
             disconnect();

@@ -9,22 +9,22 @@ import {
 import { FaWallet, FaPlusCircle, FaDownload } from "react-icons/fa";
 import { useWallet } from "@/hooks/useWallet";
 import CreateWalletModal from "@/components/CreateWalletModal";
-import ImportWalletModal from "@/components/ImportWalletModal";
 import { useRouter } from "next/router";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * A full-page component that lets the user:
  *  - Connect an existing MetaMask/browser wallet
  *  - Create a brand-new wallet (opens CreateWalletDialog)
- *  - Import via seed phrase (opens ImportWalletDialog)
  */
 export default function ConnectWallet() {
   const { address, connect, load } = useWallet();
   const [isCreating, setCreating] = useState(false);
   const [isImporting, setImporting] = useState(false);
-
   const router = useRouter();
+  const theme = useTheme();
 
+  // redirect to /tickets if user is connected
   useEffect(() => {
     if (address) router.replace("/tickets");
   }, [address, router]);
@@ -39,7 +39,7 @@ export default function ConnectWallet() {
       paddingBottom={4}
     >
       <Typography variant="h4" align="center">
-        Choose how you’d like to set up your wallet
+        How would you like to connect?
       </Typography>
 
       <Box
@@ -54,7 +54,7 @@ export default function ConnectWallet() {
         }}
       >
         {/* 1) Connect existing */}
-        <Card sx={{ flex: 1, maxWidth: 300 }}>
+        <Card sx={{ width: 300 }}>
           <CardActionArea
             onClick={connect}
             disabled={!!address}
@@ -66,18 +66,18 @@ export default function ConnectWallet() {
               gap: 2,
             }}
           >
-            <FaWallet size={48} />
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h6">Connect Wallet</Typography>
+            <FaWallet size={48} color={theme.palette.primary.main}/>
+            <CardContent sx={{ textAlign: "center", gap: 2 }}>
+              <Typography variant="h6" fontWeight={600} mb={1}>Connect Wallet</Typography>
               <Typography color="text.secondary" variant="body2">
-                Link your existing MetaMask/browser wallet
+                Link your existing MetaMask/browser wallet.
               </Typography>
             </CardContent>
           </CardActionArea>
         </Card>
 
         {/* 2) Create new */}
-        <Card sx={{ flex: 1, maxWidth: 300 }}>
+        <Card sx={{ width: 300 }}>
           <CardActionArea
             onClick={() => setCreating(true)}
             sx={{
@@ -88,30 +88,21 @@ export default function ConnectWallet() {
               gap: 2,
             }}
           >
-            <FaPlusCircle size={48} />
+            <FaPlusCircle size={48} color={theme.palette.primary.main} />
             <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h6">Create Wallet</Typography>
+              <Typography variant="h6" fontWeight={600} mb={1}>Create Wallet</Typography>
               <Typography color="text.secondary" variant="body2">
-                Generate a secure new wallet in seconds
+                Generate a secure, password-protected wallet in seconds.
               </Typography>
             </CardContent>
           </CardActionArea>
         </Card>
-
-        {/* 3) Import */}
-        
       </Box>
 
-      {/* Dialogs */}
       <CreateWalletModal
         open={isCreating}
         onClose={() => setCreating(false)}
         onCreated={load}
-      />
-      <ImportWalletModal
-        open={isImporting}
-        onClose={() => setImporting(false)}
-        onImported={load}
       />
     </Box>
   );

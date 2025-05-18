@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useWallet } from "./useWallet";
@@ -11,18 +9,19 @@ const SALE_ADDRESS = process.env.NEXT_PUBLIC_TICKET_SALE_ADDRESS;
  * Provides price, totalSold, contractBalance, plus buy/setPrice/withdraw.
  */
 export function useTicketSale() {
+  // Hooks
   const { provider, getSigner, isVenue } = useWallet();
 
-  // ----- read-only contract -----
+  // read only helpers 
   const saleRead = useMemo(() => {
     if (!provider || !SALE_ADDRESS) return null;
     return new ethers.Contract(SALE_ADDRESS, SaleAbi.abi, provider);
   }, [provider]);
 
-  // ----- live stats -----
+  // Live state
   const [priceWei, setPriceWei] = useState(null);
-  const [totalSold, setTotalSold] = useState(null); // outstanding
-  const [purchased, setPurchased] = useState(null); // lifetime
+  const [totalSold, setTotalSold] = useState(null); 
+  const [purchased, setPurchased] = useState(null); 
   const [revenueWei, setRevenueWei] = useState(null);
   const [contractBalance, setContractBalance] = useState(null);
   const [refundPct, setRefundPct] = useState(null);
@@ -60,7 +59,7 @@ export function useTicketSale() {
     };
   }, [saleRead, provider]);
 
-  // ----- write helpers -----
+  // Write helpers
   const buyTickets = useCallback(
     async (qty, priceWeiEach) => {
       const signer = await getSigner();
@@ -105,11 +104,11 @@ export function useTicketSale() {
       evts.sort((a, b) => b.blockNumber - a.blockNumber);
       return Promise.all(
         evts.slice(0, limit).map(async (e) => {
-          const { buyer, qty } = e.args; // qty is a BigInt
+          const { buyer, qty } = e.args; 
           const blk = await provider.getBlock(e.blockNumber);
           return {
             buyer,
-            qty: Number(qty), // ← convert safely
+            qty: Number(qty), 
             timestamp: new Date(blk.timestamp * 1000),
           };
         })
@@ -160,13 +159,12 @@ export function useTicketSale() {
     saleRead,
     purchased,
     revenueWei,
-
     buyTickets,
     setPrice,
     withdrawFunds,
     refundTickets,
     getRecentPurchases,
-    redeemTickets, // doorman
-    selfRedeem, // attendee
+    redeemTickets,
+    selfRedeem, 
   };
 }

@@ -1,12 +1,9 @@
-"use client";
-
 import React, {
   createContext,
   useContext,
   useState,
   useEffect,
   useCallback,
-  useMemo,
 } from "react";
 import { ethers } from "ethers";
 import TicketAbi from "@/abi/TicketToken.json";
@@ -14,16 +11,19 @@ import TicketAbi from "@/abi/TicketToken.json";
 const RPC_URL = process.env.NEXT_PUBLIC_SEPOLIA_RPC;
 const OWNER_ADDRESS = process.env.NEXT_PUBLIC_VENUE_ADDRESS?.toLowerCase();
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TICKET_TOKEN_ADDRESS;
-
 const WalletCtx = createContext(null);
 
 /**
- * <AuthWalletProvider> wraps _once_ high up (e.g. in _app.js)
- * and provides connection / role / getSigner helpers.
+ * <WalletProvider> wraps _app and provides a wallet connection context.
  */
 export function WalletProvider({ children }) {
-  // ---------- provider ----------
+  // State
   const [provider, setProvider] = useState(null);
+  const [address, setAddress] = useState(null);
+  const [role, setRole] = useState("Attendee");
+  const [loadingRole, setLoadingRole] = useState(true);
+
+  // Setup provider
   useEffect(() => {
     if (typeof window !== "undefined" && window.ethereum) {
       setProvider(new ethers.BrowserProvider(window.ethereum));
@@ -32,8 +32,6 @@ export function WalletProvider({ children }) {
     }
   }, []);
 
-  // ---------- wallet address ----------
-  const [address, setAddress] = useState(null);
   const load = useCallback((addr) => setAddress(addr), []);
   const connect = useCallback(async () => {
     if (!window.ethereum) return alert("Install MetaMask");
@@ -44,11 +42,7 @@ export function WalletProvider({ children }) {
   }, []);
   const disconnect = useCallback(() => setAddress(null), []);
 
-  // ---------- role ----------
-  const [role, setRole] = useState("Attendee"); // default
-  const [loadingRole, setLoadingRole] = useState(true);
-
-  /** Called by sub-hooks that know Token ABI so we don’t couple here */
+  // Called by sub-hooks to get AB
   useEffect(() => {
     if (!address || !provider) {
       setRole("Attendee");
@@ -83,7 +77,6 @@ export function WalletProvider({ children }) {
     };
   }, [address, provider]);
 
-  // ---------- signer helper ----------
   const getSigner = useCallback(async () => {
     let prov = provider;
     if (!prov) {
@@ -98,22 +91,17 @@ export function WalletProvider({ children }) {
   }, [provider]);
 
   const value = {
-    // connection
     provider,
     address,
     isConnected: !!address,
     connect,
     disconnect,
-
-    // role
     role,
     loadingRole,
     isVenue: role === "Venue",
     isDoorman: role === "Doorman",
     isAttendee: role === "Attendee",
-    load,   
-
-    // signer factory
+    load,
     getSigner,
   };
 

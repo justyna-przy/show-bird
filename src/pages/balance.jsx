@@ -1,13 +1,11 @@
-"use client";
-
-import React, { use } from "react";
+import React from "react";
 import { Box, Typography, CircularProgress } from "@mui/material";
 
 import { useWallet } from "@/hooks/useWallet";
-import Balance       from "@/components/Balance";
+import Balance from "@/components/Balance";
 
 export default function BalancePage() {
-  const { loadingRole} = useWallet();
+  const { loadingRole } = useWallet();
 
   if (loadingRole) {
     return (
@@ -18,7 +16,14 @@ export default function BalancePage() {
   }
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap="2rem" margin={"auto"} paddingBottom={4}>
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      gap="2rem"
+      margin={"auto"}
+      paddingBottom={4}
+    >
       <Typography variant="h4">Check Balance and Refund Tickets</Typography>
       <Balance />
     </Box>

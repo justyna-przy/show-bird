@@ -1,6 +1,3 @@
-// pages/transfer.jsx
-"use client";
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -9,31 +6,29 @@ import {
   CardContent,
   TextField,
   Button,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import { ethers } from "ethers";
-
 import { useWallet } from "@/hooks/useWallet";
 import { useTicketToken } from "@/hooks/useTicketToken";
 import { useTicketSale } from "@/hooks/useTicketSale";
 import { useTheme } from "@mui/material/styles";
+import { useToast } from "@/components/ToastContext";
 
 export default function TransferPage() {
-  /* ─── helpers ─────────────────────────────────────────── */
+  // Hooks
   const { address, isConnected, getSigner } = useWallet();
   const { tokenRead } = useTicketToken();
   const { selfRedeem } = useTicketSale();
+  const toast = useToast();
+  const theme = useTheme();
 
-  /* ─── local state ─────────────────────────────────────── */
+  // Local state
   const [ownerAddr, setOwnerAddr] = useState(null);
   const [myTickets, setMyTickets] = useState(null);
   const [qty, setQty] = useState(1);
-  const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
-  const notify = (m, s = "success") => setToast({ open: true, msg: m, sev: s });
-  const theme = useTheme();
+  
 
-  /* ─── fetch venue owner + my balance ───────────────────── */
+  // Fetches Balance
   useEffect(() => {
     if (!address || !tokenRead) return;
 
@@ -41,12 +36,12 @@ export default function TransferPage() {
     (async () => {
       try {
         const [owner, bal] = await Promise.all([
-          tokenRead.owner(), // venue address
-          tokenRead.balanceOf(address), // BigInt
+          tokenRead.owner(),
+          tokenRead.balanceOf(address), 
         ]);
         if (!stale) {
           setOwnerAddr(owner);
-          setMyTickets(Number(bal)); // safe cast (0-decimals)
+          setMyTickets(Number(bal)); 
         }
       } catch (e) {
         console.warn(e);
@@ -58,29 +53,18 @@ export default function TransferPage() {
     };
   }, [address, tokenRead]);
 
-  /* ─── transfer handler ────────────────────────────────── */
+  // Handles the transfer
   const handleTransfer = async () => {
     try {
       await selfRedeem(qty);
-      notify(`Redeemed ${qty} ticket${qty>1?"s":""}`);
+      toast.success(`Redeemed ${qty} ticket${qty > 1 ? "s" : ""}`);
       setMyTickets(prev => prev - qty);
       setQty(1);
     } catch (e) {
       console.error(e);
-      notify("Redeem failed", "error");
+      toast.error("Redeem failed");
     }
   };
-
-  /* ─── guards ──────────────────────────────────────────── */
-  if (!isConnected) {
-    return (
-      <Box p={4}>
-        <Typography variant="h6">
-          Connect your wallet to transfer tickets.
-        </Typography>
-      </Box>
-    );
-  }
 
   return (
     <>
@@ -93,7 +77,6 @@ export default function TransferPage() {
         paddingBottom={4}
       >
         <Typography variant="h4">Transfer Tickets back to Venue</Typography>
-
         <Card
           display="flex"
           flexDirection="row"
@@ -122,16 +105,14 @@ export default function TransferPage() {
                 Your tickets:&nbsp;{myTickets ?? "…"}
               </Typography>
             </Box>
-
             <TextField
               label="Quantity"
               type="number"
               size="medium"
               value={qty}
               onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-              inputProps={{ min: 1, max: myTickets ?? 1 }}
+              slotProps={{ min: 1, max: myTickets ?? 1 }}
             />
-
             <Button
               variant="contained"
             size="large"
@@ -143,22 +124,6 @@ export default function TransferPage() {
           </CardContent>
         </Card>
       </Box>
-
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.sev}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {toast.msg}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

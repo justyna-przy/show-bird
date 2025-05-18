@@ -4,7 +4,7 @@ import { GlobalStyles } from "@mui/material";
 const MyGlobalStyles = () => (
   <GlobalStyles
     styles={(theme) => ({
-      // Define the thin variant of Roca Two
+      // Define custom fonts
       "@font-face": [
         {
           fontFamily: "Roca Two",

@@ -1,9 +1,11 @@
-// components/SetterCard.jsx
-"use client";
-
 import React from "react";
-import { Paper, Typography, Box, TextField, Button } from "@mui/material";
+import { Typography, Box, TextField, Button } from "@mui/material";
 
+/**
+ * SetterCard component used in the dashboard page to render
+ * consistent input fields and buttons for setting values such as 
+ * ticket price, doorman address, and withdrawing funds
+ */
 export default function SetterCard({
   title,
   inputLabel,

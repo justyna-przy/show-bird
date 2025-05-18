@@ -1,22 +1,13 @@
-"use client";
-
 import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Chip,
-  Snackbar,
-  Alert,
-} from "@mui/material";
+import { Box, Typography, TextField, Button, Chip } from "@mui/material";
 import { ethers } from "ethers";
 import Image from "next/image";
 import { useWallet } from "@/hooks/useWallet";
 import { useTicketSale } from "@/hooks/useTicketSale";
-import theme from "@/styles/theme";
+import { useToast } from "@/components/ToastContext";
+import { useTheme } from "@mui/material/styles";
 
-// ----- single hard-coded ticket data -----
+// Pigeon show data to be rendered in the ticket
 const PIGEON_SHOW = {
   name: "Weekly Pigeon Show",
   info_tags: ["Every Friday", "7 pm - 9 pm", "Bird Plaza"],
@@ -35,37 +26,35 @@ const PIGEON_SHOW = {
 };
 
 const Tickets = () => {
+  // Hooks
+  const theme = useTheme();
+  const toast = useToast();
+  const { isConnected, isAttendee, connect } = useWallet();
+  const { priceWei, buyTickets } = useTicketSale();
+
+  // Local state
   const [qty, setQty] = useState(1);
 
-  /* toast state */
-  const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
-  const show = (msg, sev = "info") => setToast({ open: true, msg, sev });
-
-  const { isConnected, isAttendee, connect } = useWallet();
-  const { priceWei, buyTickets }            = useTicketSale(); 
-
-  const totalWei = priceWei ? priceWei * BigInt(qty) : 0n;
   const totalEth = priceWei
     ? (Number(ethers.formatEther(priceWei)) * qty).toFixed(3)
-    : "...";
+    : "0";
 
+  // Handler
   const handleBuy = async () => {
     if (!isConnected) return connect();
 
     try {
       await buyTickets(qty, priceWei);
-      show(
-        `Successfully bought ${qty} ticket${qty > 1 ? "s" : ""}!`,
-        "success"
-      );
+      toast.success(`Successfully bought ${qty} ticket${qty > 1 ? "s" : ""}!`);
     } catch (err) {
       console.error(err);
-      show("Transaction failed; see console for details.", "error");
+      toast.error(
+        "Failed to buy tickets. Please check your wallet and try again."
+      );
     }
   };
 
   return (
-    // Full-screen wrapper with light grey bg
     <Box
       sx={{
         bgcolor: "#f5f5f5",
@@ -76,7 +65,6 @@ const Tickets = () => {
         justifyContent: "center",
       }}
     >
-      {/* Absolute centered card */}
       <Box
         sx={{
           position: "absolute",
@@ -92,7 +80,6 @@ const Tickets = () => {
           overflow: "hidden",
         }}
       >
-        {/* Left: image */}
         <Box sx={{ flex: "0 0 auto", width: { xs: "100%", md: "40%" } }}>
           <Image
             src={PIGEON_SHOW.image}
@@ -102,7 +89,6 @@ const Tickets = () => {
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         </Box>
-
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h2" gutterBottom>
@@ -137,7 +123,6 @@ const Tickets = () => {
                 />
               ))}
             </Box>
-
             <Typography
               variant="body2"
               component="div"
@@ -146,8 +131,6 @@ const Tickets = () => {
               {PIGEON_SHOW.description}
             </Typography>
           </Box>
-
-          {/* Bottom payment controls */}
           <Box
             sx={{
               mt: "auto",
@@ -168,11 +151,9 @@ const Tickets = () => {
               sx={{ width: 120 }}
               size="small"
             />
-
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
               Total: {totalEth} ETH
             </Typography>
-
             <Button
               variant="contained"
               size="large"
@@ -184,21 +165,6 @@ const Tickets = () => {
           </Box>
         </Box>
       </Box>
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.sev}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {toast.msg}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

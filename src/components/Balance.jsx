@@ -1,35 +1,31 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
   Card,
   CardContent,
-  Snackbar,
-  Alert,
   TextField,
   Button,
-  Divider,
 } from "@mui/material";
 import { ethers } from "ethers";
 import { useTheme } from "@mui/material/styles";
+import { useToast } from "@/components/ToastContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useTicketToken } from "@/hooks/useTicketToken";
 import { useTicketSale } from "@/hooks/useTicketSale";
 
 export default function Balance() {
+  // Hooks
   const theme = useTheme();
-
+  const toast = useToast();
   const { address, provider } = useWallet();
   const { tokenRead } = useTicketToken();
 
+  // Local state
   const [eth, setEth] = useState(null);
   const [tickets, setTickets] = useState(null);
   const { priceWei, refundPct, refundTickets } = useTicketSale();
   const [refundQty, setRefundQty] = useState(1);
-  const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
-  const notify = (m, s = "success") => setToast({ open: true, msg: m, sev: s });
 
   // useEffect is called when the component mounts or when address, provider, or tokenRead changes
   useEffect(() => {
@@ -47,7 +43,7 @@ export default function Balance() {
           setTickets(Number(tk));
         }
       } catch (e) {
-        console.warn("Balance fetch failed:", e);
+        toast.error("Failed to fetch balance");
       }
     })();
 
@@ -149,10 +145,17 @@ export default function Balance() {
                 onClick={async () => {
                   try {
                     await refundTickets(refundQty);
-                    notify("Refund successful");
+                    toast.success(
+                      `Refunded ${refundQty} tickets for ${ethers.formatEther(
+                        (BigInt(priceWei) *
+                          BigInt(refundQty) *
+                          BigInt(refundPct)) /
+                          100n
+                      )} SETH`
+                    );
                   } catch (e) {
                     console.error(e);
-                    notify("Refund failed", "error");
+                    toast.error("Refund failed");
                   }
                 }}
               >
@@ -162,22 +165,6 @@ export default function Balance() {
           </Card>
         )}
       </Box>
-
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.sev}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {toast.msg}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

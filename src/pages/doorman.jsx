@@ -1,6 +1,3 @@
-// pages/doorman.jsx
-"use client";
-
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -10,11 +7,8 @@ import {
   Typography,
   Button,
   Divider,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import { ethers } from "ethers";
-
 import { useWallet } from "@/hooks/useWallet";
 import { useTicketSale } from "@/hooks/useTicketSale";
 import { useTicketToken } from "@/hooks/useTicketToken";
@@ -22,25 +16,19 @@ import { useTheme } from "@mui/material/styles";
 import { useToast } from "@/components/ToastContext";
 
 export default function DoormanPage() {
-  /* ------------------------------------------------------------------ */
-  /*  Wallet + contracts                                                */
-  /* ------------------------------------------------------------------ */
+  // Hooks
   const { isConnected, getSigner } = useWallet();
-  const { saleRead, redeemTickets, priceWei } = useTicketSale(); // saleRead may be null
-  const { tokenRead } = useTicketToken(); // tokenRead may be null
+  const { saleRead, redeemTickets, priceWei } = useTicketSale();
+  const { tokenRead } = useTicketToken();
   const toast = useToast();
 
-  /* ------------------------------------------------------------------ */
-  /*  Local state                                                       */
-  /* ------------------------------------------------------------------ */
+  // Local state
   const [addr, setAddr] = useState("");
   const [redeemable, setRed] = useState(null);
   const [qty, setQty] = useState(1);
   const theme = useTheme();
 
-  /* ------------------------------------------------------------------ */
-  /*  Pull redeemable count                                             */
-  /* ------------------------------------------------------------------ */
+  // Get redeemable tickets
   useEffect(() => {
     if (!ethers.isAddress(addr) || !tokenRead) {
       setRed(null);
@@ -60,44 +48,26 @@ export default function DoormanPage() {
     };
   }, [addr, tokenRead]);
 
-  /* ------------------------------------------------------------------ */
-  /*  Redeem                                                            */
-  /* ------------------------------------------------------------------ */
+  // Redeem tickets
   const doRedeem = async () => {
     try {
       if (!saleRead) {
         toast.error("Sale contract not found");
         return;
       }
-
       const signer = await getSigner();
       await saleRead.connect(signer).redeemTickets.staticCall(addr, qty);
 
       await redeemTickets(addr, qty);
       toast.success(`Redeemed ${qty} ticket${qty > 1 ? "s" : ""}`);
-
       const raw = await tokenRead.balanceOf(addr);
       setRed(Number(raw));
       setQty(1);
-      toast.success("Redeem successful");
     } catch (e) {
       console.error(e);
       toast.error("Redeem failed");
     }
   };
-
-  /* ------------------------------------------------------------------ */
-  /*  Guards                                                            */
-  /* ------------------------------------------------------------------ */
-  if (!isConnected) {
-    return (
-      <Box p={4}>
-        <Typography variant="h6">
-          Connect your doorman wallet to continue.
-        </Typography>
-      </Box>
-    );
-  }
 
   return (
     <>
@@ -107,6 +77,7 @@ export default function DoormanPage() {
         alignItems="center"
         gap="2rem"
         margin={"auto"}
+        paddingBottom={4}
       >
         <Typography variant="h4">Doorman - Redeem Ticket</Typography>
 
@@ -143,14 +114,14 @@ export default function DoormanPage() {
               size="small"
               value={qty}
               onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-              inputProps={{ min: 1, max: redeemable ?? 1 }}
+              slotProps={{ min: 1, max: redeemable ?? 1 }}
             />
 
             {priceWei && (
               <Typography variant="body2">
                 Unlocks&nbsp;
-                {ethers.formatEther(priceWei * BigInt(qty))}&nbsp;SETH
-                for the venue
+                {ethers.formatEther(priceWei * BigInt(qty))}&nbsp;SETH for the
+                venue
               </Typography>
             )}
 

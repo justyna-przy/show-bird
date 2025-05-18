@@ -23,9 +23,10 @@ export default function CreateWalletModal({ open, onClose }) {
   /**
    *  Generates a new random wallet,
    *  encrypt it with an optional password,
-   *  and download the keystore file using ethers.
+   *  and download the keystore file using ethers and private key.
    */
   const handleGenerate = async () => {
+    // Generate a new wallet and download the keystore file
     const wallet = Wallet.createRandom();
     const json = await wallet.encrypt(password || "password");
     const blob = new Blob([json], { type: "application/json" });
@@ -36,7 +37,7 @@ export default function CreateWalletModal({ open, onClose }) {
     a.click();
     URL.revokeObjectURL(url);
 
-    // 2) Download the raw private key as a .txt file
+    // Download the raw private key as a .txt file
     const pkBlob = new Blob([wallet.privateKey], { type: "text/plain" });
     const pkUrl = URL.createObjectURL(pkBlob);
     const a2 = document.createElement("a");
@@ -45,11 +46,9 @@ export default function CreateWalletModal({ open, onClose }) {
     a2.click();
     URL.revokeObjectURL(pkUrl);
 
-    // 3) Let the user know via toast
     toast.info(
       "Import the keystore file or private key into your wallet app to access your new account.",
     );
-
     onClose();
   };
 
