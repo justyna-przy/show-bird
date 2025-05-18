@@ -31,16 +31,12 @@ export default function ConnectWallet() {
 
   return (
     <Box
-      sx={{
-        minHeight: "calc(100vh - 80px)",
-        pt: 8,
-        bgcolor: "#f5f5f5",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 4,
-        width: "100%",
-      }}
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      gap="2rem"
+      margin={"auto"}
+      paddingBottom={4}
     >
       <Typography variant="h4" align="center">
         Choose how you’d like to set up your wallet
@@ -103,26 +99,7 @@ export default function ConnectWallet() {
         </Card>
 
         {/* 3) Import */}
-        <Card sx={{ flex: 1, maxWidth: 300 }}>
-          <CardActionArea
-            onClick={() => setImporting(true)}
-            sx={{
-              py: 4,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <FaDownload size={48} />
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h6">Import Wallet</Typography>
-              <Typography color="text.secondary" variant="body2">
-                Restore from seed phrase
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
+        
       </Box>
 
       {/* Dialogs */}

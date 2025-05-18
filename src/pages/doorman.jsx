@@ -18,6 +18,8 @@ import { ethers } from "ethers";
 import { useWallet } from "@/hooks/useWallet";
 import { useTicketSale } from "@/hooks/useTicketSale";
 import { useTicketToken } from "@/hooks/useTicketToken";
+import { useTheme } from "@mui/material/styles";
+import { useToast } from "@/components/ToastContext";
 
 export default function DoormanPage() {
   /* ------------------------------------------------------------------ */
@@ -26,6 +28,7 @@ export default function DoormanPage() {
   const { isConnected, getSigner } = useWallet();
   const { saleRead, redeemTickets, priceWei } = useTicketSale(); // saleRead may be null
   const { tokenRead } = useTicketToken(); // tokenRead may be null
+  const toast = useToast();
 
   /* ------------------------------------------------------------------ */
   /*  Local state                                                       */
@@ -33,9 +36,7 @@ export default function DoormanPage() {
   const [addr, setAddr] = useState("");
   const [redeemable, setRed] = useState(null);
   const [qty, setQty] = useState(1);
-  const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
-
-  const notify = (msg, sev = "success") => setToast({ open: true, msg, sev });
+  const theme = useTheme();
 
   /* ------------------------------------------------------------------ */
   /*  Pull redeemable count                                             */
@@ -65,23 +66,23 @@ export default function DoormanPage() {
   const doRedeem = async () => {
     try {
       if (!saleRead) {
-        notify("Contract not ready yet", "error");
+        toast.error("Sale contract not found");
         return;
       }
 
-      const signer = await getSigner(); 
+      const signer = await getSigner();
       await saleRead.connect(signer).redeemTickets.staticCall(addr, qty);
 
       await redeemTickets(addr, qty);
-      notify(`Redeemed ${qty} ticket${qty > 1 ? "s" : ""}`);
+      toast.success(`Redeemed ${qty} ticket${qty > 1 ? "s" : ""}`);
 
       const raw = await tokenRead.balanceOf(addr);
       setRed(Number(raw));
       setQty(1);
-      notify("Redeem successful", "success");
+      toast.success("Redeem successful");
     } catch (e) {
       console.error(e);
-      notify("Redeem failed", "error");
+      toast.error("Redeem failed");
     }
   };
 
@@ -100,12 +101,25 @@ export default function DoormanPage() {
 
   return (
     <>
-      <Box p={4}>
-        <Typography variant="h4" gutterBottom>
-          Doorman — Redeem Tickets
-        </Typography>
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        gap="2rem"
+        margin={"auto"}
+      >
+        <Typography variant="h4">Doorman - Redeem Ticket</Typography>
 
-        <Card sx={{ maxWidth: 480, boxShadow: 4 }}>
+        <Card
+          sx={{
+            bgcolor: theme.palette.background.paper,
+            borderRadius: 2,
+            border: `2px solid ${theme.palette.primary.light}`,
+            overflow: "hidden",
+            alignItems: "center",
+            width: "480px",
+          }}
+        >
           <CardContent
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
@@ -120,7 +134,7 @@ export default function DoormanPage() {
             <Divider sx={{ my: 1 }} />
 
             <Typography>
-              Redeemable (purchased) tickets:&nbsp;{redeemable ?? "…"}
+              Redeemable tickets:&nbsp;{redeemable ?? "0"}
             </Typography>
 
             <TextField
@@ -136,6 +150,7 @@ export default function DoormanPage() {
               <Typography variant="body2">
                 Unlocks&nbsp;
                 {ethers.formatEther(priceWei * BigInt(qty))}&nbsp;SETH
+                for the venue
               </Typography>
             )}
 
@@ -155,22 +170,6 @@ export default function DoormanPage() {
           </CardContent>
         </Card>
       </Box>
-
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setToast({ ...toast, open: false })}
-          severity={toast.sev}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {toast.msg}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

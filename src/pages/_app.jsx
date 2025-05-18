@@ -6,6 +6,7 @@ import MyGlobalStyles from "@/styles/GlobalStyles";
 import Navbar from "@/components/Navbar";
 import { WalletProvider } from "@/hooks/useWallet";
 import Forbidden from "@/pages/403";
+import { ToastProvider } from "@/components/ToastContext";
 
 export default function MyApp({ Component, pageProps }) {
   return (
@@ -23,8 +24,9 @@ export default function MyApp({ Component, pageProps }) {
       </Head>
 
       <WalletProvider>
-        {/* single, guarded render */}
-        <GuardedLayout Component={Component} pageProps={pageProps} />
+        <ToastProvider>
+          <GuardedLayout Component={Component} pageProps={pageProps} />
+        </ToastProvider>
       </WalletProvider>
     </ThemeProvider>
   );

@@ -9,18 +9,20 @@ import {
   Button,
 } from "@mui/material";
 import { Wallet } from "ethers";
+import { useToast } from "@/components/ToastContext";
 
 /**
  * A modal that lets the user generate a brand-new Ethereum
  * wallet, download its keystore file, and surface the address
  * back to the parent via onCreated.
  */
-export default function CreateWalletModal({ open, onClose, onCreated }) {
+export default function CreateWalletModal({ open, onClose }) {
   const [password, setPassword] = useState("");
+  const toast = useToast();
 
   /**
-   *  Generates a new random wallet, 
-   *  encrypt it with an optional password, 
+   *  Generates a new random wallet,
+   *  encrypt it with an optional password,
    *  and download the keystore file using ethers.
    */
   const handleGenerate = async () => {
@@ -34,8 +36,20 @@ export default function CreateWalletModal({ open, onClose, onCreated }) {
     a.click();
     URL.revokeObjectURL(url);
 
-    // Tells the parent component that we have an address and closes the modal
-    onCreated(wallet.address);
+    // 2) Download the raw private key as a .txt file
+    const pkBlob = new Blob([wallet.privateKey], { type: "text/plain" });
+    const pkUrl = URL.createObjectURL(pkBlob);
+    const a2 = document.createElement("a");
+    a2.href = pkUrl;
+    a2.download = "showbird-private-key.txt";
+    a2.click();
+    URL.revokeObjectURL(pkUrl);
+
+    // 3) Let the user know via toast
+    toast.info(
+      "Import the keystore file or private key into your wallet app to access your new account.",
+    );
+
     onClose();
   };
 

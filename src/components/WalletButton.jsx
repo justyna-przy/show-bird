@@ -38,7 +38,7 @@ export default function WalletButton() {
   // 1) Not connected: show a connect button
   if (!isConnected) {
     return (
-      <Button variant="contained" onClick={connect}>
+      <Button variant="contained" onClick={() => router.push("/connect-wallet")}>
         Connect&nbsp;Wallet
       </Button>
     );

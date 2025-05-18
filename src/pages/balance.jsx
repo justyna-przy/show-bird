@@ -18,7 +18,7 @@ export default function BalancePage() {
   }
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" gap="2rem" margin={"auto"}>
+    <Box display="flex" flexDirection="column" alignItems="center" gap="2rem" margin={"auto"} paddingBottom={4}>
       <Typography variant="h4">Check Balance and Refund Tickets</Typography>
       <Balance />
     </Box>

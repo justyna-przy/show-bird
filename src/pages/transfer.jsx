@@ -90,6 +90,7 @@ export default function TransferPage() {
         alignItems="center"
         gap="2rem"
         margin={"auto"}
+        paddingBottom={4}
       >
         <Typography variant="h4">Transfer Tickets back to Venue</Typography>
 

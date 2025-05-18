@@ -34,6 +34,7 @@ export function WalletProvider({ children }) {
 
   // ---------- wallet address ----------
   const [address, setAddress] = useState(null);
+  const load = useCallback((addr) => setAddress(addr), []);
   const connect = useCallback(async () => {
     if (!window.ethereum) return alert("Install MetaMask");
     const [acct] = await window.ethereum.request({
@@ -110,6 +111,7 @@ export function WalletProvider({ children }) {
     isVenue: role === "Venue",
     isDoorman: role === "Doorman",
     isAttendee: role === "Attendee",
+    load,   
 
     // signer factory
     getSigner,
