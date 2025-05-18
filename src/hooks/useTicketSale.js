@@ -124,6 +124,8 @@ export function useTicketSale() {
 
   const redeemTickets = useCallback(
     async (attendeeAddr, qty) => {
+      if (!saleRead?.redeemTickets)
+        throw new Error("ABI missing redeemTickets");
       const signer = await getSigner();
       const contract = saleRead.connect(signer);
       const tx = await contract.redeemTickets(attendeeAddr, qty);
@@ -131,6 +133,14 @@ export function useTicketSale() {
     },
     [getSigner, saleRead]
   );
+
+  const selfRedeem = useCallback(async (qty) => {
+    if (!saleRead?.selfRedeem) throw new Error("ABI missing selfRedeem");
+    const signer   = await getSigner();
+    const contract = saleRead.connect(signer);
+    const tx       = await contract.selfRedeem(qty);
+    await tx.wait();
+  }, [getSigner, saleRead]);
 
   return {
     saleRead,
@@ -144,6 +154,7 @@ export function useTicketSale() {
     withdrawFunds,
     refundTickets,
     getRecentPurchases,
-    redeemTickets,
+    redeemTickets,   // doorman
+    selfRedeem,   // attendee
   };
 }

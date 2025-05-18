@@ -17,6 +17,7 @@ import { ethers } from "ethers";
 
 import { useWallet }      from "@/hooks/useWallet";
 import { useTicketSale }  from "@/hooks/useTicketSale";
+import { useTicketToken } from "@/hooks/useTicketToken";
 
 export default function DoormanPage() {
   /* ------------------------------------------------------------------ */
@@ -24,6 +25,7 @@ export default function DoormanPage() {
   /* ------------------------------------------------------------------ */
   const { isConnected } = useWallet();
   const { saleRead, redeemTickets, priceWei } = useTicketSale();   // saleRead may be null
+  const { tokenRead } = useTicketToken(); // tokenRead may be null
 
   /* ------------------------------------------------------------------ */
   /*  Local state                                                       */
@@ -39,21 +41,21 @@ export default function DoormanPage() {
   /*  Pull redeemable count                                             */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    if (!ethers.isAddress(addr) || !saleRead) {
+    if (!ethers.isAddress(addr) || !tokenRead) {
       setRed(null);
       return;
     }
     let ignore = false;
     (async () => {
       try {
-        const raw = await saleRead.purchases(addr);
+        const raw = await tokenRead.balanceOf(addr);
         if (!ignore) setRed(Number(raw));
       } catch {
         if (!ignore) setRed(null);
       }
     })();
     return () => { ignore = true; };
-  }, [addr, saleRead]);
+  }, [addr, tokenRead]);
 
   /* ------------------------------------------------------------------ */
   /*  Redeem                                                            */
@@ -71,9 +73,10 @@ export default function DoormanPage() {
       await redeemTickets(addr, qty);
       notify(`Redeemed ${qty} ticket${qty>1?"s":""}`);
 
-      const raw = await saleRead.purchases(addr);
+      const raw = await tokenRead.balanceOf(addr); 
       setRed(Number(raw));
       setQty(1);
+      notify("Redeem successful", "success");
     } catch (e) {
       console.error(e);
       notify("Redeem failed", "error");
@@ -93,9 +96,7 @@ export default function DoormanPage() {
     );
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  UI                                                                */
-  /* ------------------------------------------------------------------ */
+
   return (
     <>
       <Box p={4}>

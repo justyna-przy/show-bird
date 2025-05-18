@@ -10,6 +10,7 @@ import {
   Alert,
   TextField,
   Button,
+  Divider,
 } from "@mui/material";
 import { ethers } from "ethers";
 import { useTheme } from "@mui/material/styles";
@@ -57,197 +58,93 @@ export default function Balance() {
 
   return (
     <>
-      <Card
+      <Box
         display="flex"
         flexDirection="row"
         justifyContent="space-between"
         alignItems="center"
         gap={2}
         sx={{
-          bgcolor: theme.palette.background.paper,
+          bgcolor: theme.palette.primary.main,
           borderRadius: 2,
           border: `2px solid ${theme.palette.primary.light}`,
+          overflow: "hidden",
         }}
       >
-        {/* Left side: crypto balance and tickets */}
         <Box
           display="flex"
           flexDirection="column"
-          gap={1}
-          sx={{ bgcolor: theme.palette.background.default, p: 3 }}
+          justifyContent={"space-between"}
+          gap={3}
+          sx={{ p: 6 }}
         >
-          <Typography
-              variant="subtitle1"
-              sx={{ color: theme.palette.primary.main, fontWeight: 600 }}
-            >
-              Crypto Balance
-            </Typography>
-          <Typography variant="h5" fontWeight={700}>
-            {eth !== null ? `${Number(eth).toFixed(5)} ETH` : "…"}
-          </Typography>
-          <Typography
-              variant="subtitle1"
-              sx={{ color: theme.palette.primary.main, fontWeight: 600 }}
-            >
-              My Tickets
-            </Typography>
-          <Typography variant="h5" fontWeight={700}>
-            {tickets !== null ? tickets : "…"}
-          </Typography>
-        </Box>
-        <Card
-            sx={{
-              minWidth: 260,
-              borderRadius: 3,
-              boxShadow: 4,
-              bgcolor: theme.palette.background.paper,
-              border: `2px dashed ${theme.palette.primary.main}`,
-            }}
-          >
-            <CardContent
-              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-            >
-              <Typography variant="subtitle1" fontWeight={600}>
-                Refund Tickets ({refundPct}% back)
-              </Typography>
-
-              <TextField
-                label="Quantity"
-                type="number"
-                size="small"
-                value={refundQty}
-                onChange={(e) =>
-                  setRefundQty(Math.max(1, Number(e.target.value)))
-                }
-                inputProps={{ min: 1, max: tickets ?? 1 }}
-              />
-
-              {/* calculated refund */}
-              <Typography variant="body2">
-                You’ll receive&nbsp;
-                {ethers.formatEther(
-                  (priceWei * BigInt(refundQty) * BigInt(refundPct)) / 100n
-                )}{" "}
-                SETH
-              </Typography>
-
-              <Button
-                variant="contained"
-                disabled={!tickets || refundQty > tickets}
-                onClick={async () => {
-                  try {
-                    await refundTickets(refundQty);
-                    notify("Refund successful");
-                  } catch (e) {
-                    console.error(e);
-                    notify("Refund failed", "error");
-                  }
-                }}
-              >
-                Refund
-              </Button>
-            </CardContent>
-          </Card>
-        
-      </Card>
-
-      <Box display="flex" gap={3} flexWrap="wrap" sx={{ mt: 2 }}>
-        {/* ETH card */}
-        <Card
-          sx={{
-            minWidth: 200,
-            borderRadius: 3,
-            boxShadow: 4,
-            bgcolor: theme.palette.background.paper,
-            border: `2px solid ${theme.palette.primary.light}`,
-          }}
-        >
-          <CardContent
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
+          <Box display="flex" flexDirection="column" gap={1}>
             <Typography
               variant="subtitle1"
-              sx={{ color: theme.palette.primary.main, fontWeight: 600 }}
+              sx={{ color: "white", fontWeight: 600 }}
             >
               Crypto Balance
             </Typography>
-            <Typography variant="h5" fontWeight={700}>
-              {eth !== null ? `${eth} ETH` : "…"}
+            <Typography variant="h4" fontWeight={500} color="white">
+              {eth !== null ? `${Number(eth).toFixed(5)} ETH` : "0"}
             </Typography>
-          </CardContent>
-        </Card>
+          </Box>
 
-        {/* Ticket card */}
-        <Card
-          sx={{
-            minWidth: 200,
-            borderRadius: 3,
-            boxShadow: 4,
-            bgcolor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
-          }}
-        >
-          <CardContent
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <Typography variant="subtitle1" fontWeight={600}>
+          <Box display="flex" flexDirection="column" gap={1}>
+            <Typography
+              variant="subtitle1"
+              sx={{ color: "white", fontWeight: 600 }}
+            >
               My Tickets
             </Typography>
-            <Typography variant="h5" fontWeight={700}>
-              {tickets !== null ? tickets : "…"}
+            <Typography variant="h4" fontWeight={500} color="white">
+              {tickets !== null ? tickets : "0"}
             </Typography>
-          </CardContent>
-        </Card>
-
+          </Box>
+        </Box>
         {priceWei && refundPct !== null && (
           <Card
             sx={{
-              minWidth: 260,
-              borderRadius: 3,
-              boxShadow: 4,
               bgcolor: theme.palette.background.paper,
-              border: `2px dashed ${theme.palette.primary.main}`,
+              borderRadius: 0,
+              padding: 4,
+              gap: 2,
             }}
           >
             <CardContent
               sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
-              <Typography variant="subtitle1" fontWeight={600}>
+              <Typography
+                variant="subtitle1"
+                fontWeight={600}
+                fontSize={"1.2rem"}
+              >
                 Refund Tickets ({refundPct}% back)
               </Typography>
 
               <TextField
                 label="Quantity"
                 type="number"
-                size="small"
+                size="medium"
                 value={refundQty}
                 onChange={(e) =>
                   setRefundQty(Math.max(1, Number(e.target.value)))
                 }
-                inputProps={{ min: 1, max: tickets ?? 1 }}
+                slotProps={{ min: 1, max: tickets ?? 1 }}
               />
 
-              {/* calculated refund */}
-              <Typography variant="body2">
+              <Typography variant="body2" fontSize="1.1rem">
                 You’ll receive&nbsp;
                 {ethers.formatEther(
-                  (priceWei * BigInt(refundQty) * BigInt(refundPct)) / 100n
+                  (BigInt(priceWei) * BigInt(refundQty) * BigInt(refundPct)) /
+                    100n
                 )}{" "}
                 SETH
               </Typography>
 
               <Button
                 variant="contained"
+                size="large"
                 disabled={!tickets || refundQty > tickets}
                 onClick={async () => {
                   try {
